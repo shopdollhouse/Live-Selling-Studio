@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Create a vertical 9:16 livestream layout with slides and a webcam overlay." />
+    <title>Live Layout Studio</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@snap/camera-kit": "https://esm.sh/@snap/camera-kit@1.9.0"
+        }
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+    <script src="app.js" type="module"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="stage-panel" aria-label="Broadcast preview">
+        <div class="monitor-bar">
+          <div>
+            <p class="eyebrow">Broadcast Canvas</p>
+            <h1>Live Layout Studio</h1>
+          </div>
+          <div class="status-pill" id="renderStatus">9:16 · Ready</div>
+        </div>
+
+        <div class="canvas-frame">
+          <canvas id="broadcastCanvas" width="1080" height="1920" aria-label="Vertical live stream canvas preview"></canvas>
+        </div>
+      </section>
+
+      <aside class="control-panel" aria-label="Stream layout controls">
+        <section class="panel-section scene-panel">
+          <div class="section-heading">
+            <h2>Main View</h2>
+            <span id="sceneStatus">Presentation</span>
+          </div>
+
+          <div class="segmented-control" role="group" aria-label="Main view switcher">
+            <button id="presentationMode" type="button" class="is-active">Presentation Mode</button>
+            <button id="fullCameraMode" type="button">Full Camera Mode</button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <h2>Slides</h2>
+            <span id="slideCount">0 / 0</span>
+          </div>
+
+          <label class="file-button">
+            <input id="slideUpload" type="file" accept="image/png,image/jpeg,application/pdf" multiple />
+            Upload Slides
+          </label>
+
+          <div class="button-row">
+            <button id="prevSlide" type="button" class="secondary-button">Previous</button>
+            <button id="nextSlide" type="button" class="primary-button">Next Slide</button>
+          </div>
+
+          <label class="file-button script-file-button">
+            <input id="scriptUpload" type="file" accept="text/plain,.txt" />
+            Load Script File
+          </label>
+        </section>
+
+        <section class="panel-section teleprompter-panel">
+          <div class="section-heading">
+            <h2>Live Teleprompter</h2>
+            <span id="teleprompterSlideLabel">No slide</span>
+          </div>
+
+          <div class="teleprompter-display" id="teleprompterText" aria-live="polite">
+            Upload slides, then add script text for each slide.
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <h2>Slide Scripts</h2>
+            <span id="scriptEditorStatus">0 slides</span>
+          </div>
+
+          <div class="slide-script-list" id="slideScriptList"></div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <h2>TikTok Live</h2>
+            <span id="tiktokStatus">Disconnected</span>
+          </div>
+
+          <label class="field-label" for="tiktokUsername">TikTok Username</label>
+          <input id="tiktokUsername" class="text-input" type="text" autocomplete="off" placeholder="@creator" />
+
+          <div class="button-row">
+            <button id="connectTikTok" type="button" class="primary-button">Connect to Live</button>
+            <button id="disconnectTikTok" type="button" class="secondary-button">Disconnect</button>
+          </div>
+
+          <div class="button-row compact-buttons">
+            <button id="testLikeAlert" type="button" class="ghost-button">Test Like</button>
+            <button id="testFollowAlert" type="button" class="ghost-button">Test Follow</button>
+            <button id="testGiftAlert" type="button" class="ghost-button">Test Gift</button>
+            <button id="testSoldAlert" type="button" class="ghost-button">Test Sold</button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <h2>Product Showcase Management</h2>
+            <span id="productStatus">No product</span>
+          </div>
+
+          <label class="field-label" for="productName">Product Name</label>
+          <input id="productName" class="text-input" type="text" placeholder="Silk Glow Serum" />
+
+          <label class="field-label stacked" for="productPrice">Price</label>
+          <input id="productPrice" class="text-input" type="text" placeholder="$39 today" />
+
+          <label class="field-label stacked" for="productCta">Call-to-Action</label>
+          <input id="productCta" class="text-input" type="text" placeholder="Tap the link below to buy!" />
+
+          <div class="button-row">
+            <button id="pinProduct" type="button" class="primary-button">Pin Product</button>
+            <button id="clearProduct" type="button" class="secondary-button">Clear</button>
+          </div>
+
+          <label class="field-label stacked" for="countdownMinutes">Flash-Sale Timer</label>
+          <input id="countdownMinutes" class="text-input" type="number" min="0.25" step="0.25" value="5" />
+
+          <div class="button-row compact-buttons">
+            <button id="startCountdown" type="button" class="ghost-button">Start Timer</button>
+            <button id="stopCountdown" type="button" class="ghost-button">Pause</button>
+            <button id="resetCountdown" type="button" class="ghost-button">Reset</button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <h2>Camera</h2>
+            <span id="cameraStatus">Idle</span>
+          </div>
+
+          <label class="field-label" for="cameraSelect">Webcam Source</label>
+          <select id="cameraSelect">
+            <option value="">Request camera access</option>
+          </select>
+
+          <button id="refreshCameras" type="button" class="secondary-button full-width">Refresh Cameras</button>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <h2>Camera Shape</h2>
+            <span id="cameraShapeStatus">Square</span>
+          </div>
+
+          <label class="field-label" for="cameraShape">Overlay Shape</label>
+          <select id="cameraShape">
+            <option value="square" selected>Square</option>
+            <option value="rounded">Rounded Rectangle</option>
+            <option value="circle">Circle</option>
+            <option value="heart">Heart</option>
+          </select>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <h2>Snapchat Lenses</h2>
+            <span id="snapStatus">Not configured</span>
+          </div>
+
+          <label class="field-label" for="snapApiToken">API Token</label>
+          <input
+            id="snapApiToken"
+            class="text-input"
+            type="password"
+            autocomplete="off"
+            placeholder="YOUR_SNAP_CAMERA_KIT_API_TOKEN"
+          />
+
+          <label class="field-label stacked" for="lensGroupId">Lens Group ID</label>
+          <input id="lensGroupId" class="text-input" type="text" placeholder="Paste Lens Group ID" />
+
+          <button id="loadLensGroup" type="button" class="secondary-button full-width">Load Lens Group</button>
+
+          <label class="field-label stacked" for="lensSelect">Available Lenses</label>
+          <select id="lensSelect">
+            <option value="">Load a Lens Group first</option>
+          </select>
+
+          <div class="lens-quick-actions" id="lensQuickActions" aria-label="Saved Snapchat lens shortcuts"></div>
+
+          <label class="field-label stacked" for="lensId">Lens ID</label>
+          <input id="lensId" class="text-input" type="text" placeholder="Paste Lens ID" />
+
+          <div class="button-row">
+            <button id="applyLens" type="button" class="primary-button">Apply Lens</button>
+            <button id="removeLens" type="button" class="secondary-button">Remove</button>
+          </div>
+        </section>
+
+        <section class="panel-section" id="overlayControls">
+          <div class="section-heading">
+            <h2>Webcam Overlay</h2>
+            <button id="resetOverlay" type="button" class="ghost-button">Reset</button>
+          </div>
+
+          <label class="range-control" for="overlayX">
+            <span>X Position</span>
+            <output id="overlayXValue">313 px</output>
+          </label>
+          <input id="overlayX" type="range" min="0" max="1080" value="313" />
+
+          <label class="range-control" for="overlayY">
+            <span>Y Position</span>
+            <output id="overlayYValue">1485 px</output>
+          </label>
+          <input id="overlayY" type="range" min="0" max="1920" value="1485" />
+
+          <label class="range-control" for="overlayScale">
+            <span>Size</span>
+            <output id="overlayScaleValue">42%</output>
+          </label>
+          <input id="overlayScale" type="range" min="18" max="80" value="42" />
+        </section>
+
+        <section class="panel-section compact">
+          <div class="shortcut-grid" aria-label="Keyboard shortcuts">
+            <span>←</span>
+            <p>Previous slide</p>
+            <span>→</span>
+            <p>Next slide</p>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <canvas id="snapCameraCanvas" width="1280" height="720" aria-hidden="true"></canvas>
+    <audio id="likeAlertAudio" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+    <audio id="followAlertAudio" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+    <audio id="giftAlertAudio" preload="auto" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"></audio>
+  </body>
+</html>
