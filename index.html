@@ -92,11 +92,14 @@
                 </div>
 
                 <input type="password" id="snapApiToken" autocomplete="off" placeholder="API Token / App ID" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                <input type="password" id="snapLensGroupId" autocomplete="off" placeholder="Demo Lens Group ID" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="password" id="snapLensId" autocomplete="off" placeholder="Lens ID" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
-                    <input type="password" id="snapLensGroupId" autocomplete="off" placeholder="Lens Group ID" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                    <button onclick="loadLensGroup()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 py-2 px-3 rounded-lg text-xs font-bold transition">Load Available Lenses</button>
+                    <button onclick="applySelectedLens()" class="bg-amber-500 hover:bg-amber-400 text-zinc-950 border border-amber-300 py-2 px-3 rounded-lg text-xs font-extrabold transition">Apply Selected Lens</button>
                 </div>
-                <button onclick="applyCustomLens()" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 border border-amber-300 py-2 px-3 rounded-lg text-xs font-extrabold transition">Apply Custom Lens</button>
+                <select id="snapLensSelect" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                    <option value="">Load a lens group first</option>
+                </select>
                 <div id="snapStatus" class="rounded-lg border border-zinc-900 bg-black px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
                     Camera Kit idle
                 </div>
@@ -263,6 +266,7 @@
         const environmentStatusBadge = document.getElementById('environmentStatusBadge');
         const sidebarTimerDisplay = document.getElementById('sidebarTimerDisplay');
         const muteVoiceAnnouncements = document.getElementById('muteVoiceAnnouncements');
+        const snapLensSelect = document.getElementById('snapLensSelect');
 
         let viewMode = 'presentation';
         let currentShape = 'square';
@@ -275,6 +279,7 @@
         let snapSession = null;
         let snapOutputCanvas = null;
         let snapActiveLens = null;
+        let snapAvailableLenses = [];
         let snapFiltersEnabled = false;
 
         let uploadedSlides = [];
@@ -479,25 +484,67 @@
             }
         }
 
-        async function applyCustomLens() {
-            const lensId = document.getElementById('snapLensId').value.trim();
+        async function loadLensGroup() {
             const lensGroupId = document.getElementById('snapLensGroupId').value.trim();
 
-            if (!lensId || !lensGroupId) {
-                snapStatus.innerText = 'Lens ID and Lens Group ID required';
+            if (!lensGroupId) {
+                snapStatus.innerText = 'Add your Demo Lens Group ID';
                 return;
             }
 
             try {
-                snapStatus.innerText = 'Loading custom lens';
+                snapStatus.innerText = 'Loading lens group';
+                await ensureSnapSession();
+                const { lenses, errors } = await snapCameraKit.lensRepository.loadLensGroups([lensGroupId]);
+                if (errors?.length) {
+                    console.warn('Snap lens group returned partial errors.', errors);
+                }
+                snapAvailableLenses = lenses || [];
+                snapLensSelect.innerHTML = '';
+
+                if (!snapAvailableLenses.length) {
+                    snapLensSelect.innerHTML = '<option value="">No lenses found in group</option>';
+                    snapStatus.innerText = 'No lenses found in group';
+                    return;
+                }
+
+                snapAvailableLenses.forEach((lens, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = lens.name || `Lens ${index + 1}`;
+                    snapLensSelect.appendChild(option);
+                });
+
+                snapStatus.innerText = `${snapAvailableLenses.length} Snap lenses ready`;
+            } catch (err) {
+                console.warn('Unable to load Snap lens group.', err);
+                snapStatus.innerText = 'Unable to load lens group';
+                await fallbackToRawCamera('Snap lens group load failed; routing raw webcam.');
+            }
+        }
+
+        async function applySelectedLens() {
+            try {
+                if (!snapAvailableLenses.length) {
+                    await loadLensGroup();
+                }
+
+                const selectedLens = snapAvailableLenses[parseInt(snapLensSelect.value, 10) || 0];
+                if (!selectedLens) {
+                    snapStatus.innerText = 'Select a lens first';
+                    return;
+                }
+
+                snapStatus.innerText = 'Applying selected lens';
                 const { session } = await ensureSnapSession();
                 await routeStreamThroughSnap();
-                const lens = await snapCameraKit.lensRepository.loadLens(lensId, lensGroupId);
+                const lens = selectedLens;
                 const applied = await session.applyLens(lens);
                 snapActiveLens = applied === false ? null : lens;
                 snapFiltersEnabled = applied !== false;
                 snapFilterToggle.checked = snapFiltersEnabled;
-                snapStatus.innerText = snapFiltersEnabled ? 'Custom Snap lens applied' : 'Lens apply interrupted';
+                snapStatus.innerText = snapFiltersEnabled ? 'Selected Snap lens applied' : 'Lens apply interrupted';
+                updateStatusBadges();
             } catch (err) {
                 console.warn('Unable to apply Snap lens.', err);
                 snapStatus.innerText = 'Unable to apply Snap lens';
@@ -526,8 +573,8 @@
 
             try {
                 await routeStreamThroughSnap();
-                if (document.getElementById('snapLensId').value.trim()) {
-                    await applyCustomLens();
+                if (snapAvailableLenses.length || document.getElementById('snapLensGroupId').value.trim()) {
+                    await applySelectedLens();
                 }
             } catch (err) {
                 console.warn('Unable to enable Snap filters.', err);
