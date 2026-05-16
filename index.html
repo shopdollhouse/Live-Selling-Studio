@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Selling Studio - High Conversion Build</title>
+    <title>Live Selling Studio - Dual Layer Build</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script type="module" src="https://unpkg.com/@snap/camera-kit/dist/index.js"></script>
     <style>
         body { background-color: #0b0b0c; color: #f4f4f5; font-family: system-ui, sans-serif; }
         .teleprompter-text { font-family: Georgia, serif; line-height: 1.6; }
@@ -18,7 +19,7 @@
 
     <div class="flex-1 h-full flex flex-col items-center justify-center bg-[#121214] p-6 border-r border-[#27272a]">
         <div class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span> 9:16 Live Stream Monitor (Capture via OBS window share)
+            <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span> 9:16 Live Stream Monitor (Slides Background + Floating Camera Box)
         </div>
 
         <div class="relative shadow-2xl border border-zinc-800 rounded-2xl overflow-hidden bg-black flex" style="height: 82vh; aspect-ratio: 9/16;">
@@ -33,19 +34,23 @@
     <div class="w-[440px] h-full bg-[#0b0b0c] flex flex-col justify-between border-l border-zinc-900">
 
         <div class="flex-1 overflow-y-auto p-6 space-y-5">
-            <div>
-                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">Live Layout Studio</h1>
-                <p class="text-xs text-zinc-500">Premium Live E-Commerce Engine</p>
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">Live Layout Studio</h1>
+                    <p class="text-xs text-zinc-500">Dual-Layer Presentation Engine</p>
+                </div>
+                <button onclick="resetStudioEngine()" class="shrink-0 border border-red-900/70 bg-red-950/20 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-red-300 hover:bg-red-950/40 rounded-lg transition">⚠️ RESET STUDIO ENGINE</button>
             </div>
 
             <hr class="border-zinc-900" />
 
             <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
-                <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Main View Target</label>
+                <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Screen Layout Target</label>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="setViewMode('presentation')" id="btn-mode-pres" class="py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-100 text-zinc-900 transition">Presentation Mode</button>
                     <button onclick="setViewMode('camera')" id="btn-mode-cam" class="py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition">Full Camera Mode</button>
                 </div>
+                <p class="text-[10px] text-zinc-500 leading-normal"><strong>Presentation Mode</strong> renders your uploaded slide graphics across the full frame with your filtered webcam running inside a clean, separate overlay box.</p>
             </div>
 
             <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-2">
@@ -53,27 +58,53 @@
                 <select id="cameraSourceSelect" onchange="changeCameraSource(this.value)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
                     <option value="">Detecting camera sources...</option>
                 </select>
+                <div class="relative overflow-hidden rounded-lg border border-zinc-800 bg-black aspect-video">
+                    <video id="rawWebcam" autoplay muted playsinline class="h-full w-full object-cover"></video>
+                    <div id="cameraStatus" class="absolute inset-x-0 bottom-0 bg-black/80 px-3 py-1.5 text-[10px] uppercase tracking-wider text-zinc-400">
+                        Waiting for camera permission
+                    </div>
+                </div>
                 <button onclick="loadCameraDevices()" class="w-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Refresh Camera List</button>
                 <p class="text-[10px] text-zinc-500 leading-normal">Open Snapchat/Snap Camera/OBS Virtual Camera first, then select that virtual camera here to render filtered video into the live canvas.</p>
             </div>
 
+            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                    <label class="block text-[11px] uppercase font-bold text-amber-400 tracking-wider">Snapchat Lenses & API Integration</label>
+                    <label class="inline-flex items-center gap-2 text-[10px] uppercase font-bold tracking-wider text-zinc-400">
+                        <input id="snapFilterToggle" type="checkbox" onchange="toggleSnapFilters(this.checked)" class="h-4 w-4 accent-amber-500">
+                        <span>Filters ON</span>
+                    </label>
+                </div>
+
+                <input type="password" id="snapApiToken" autocomplete="off" placeholder="API Token / App ID" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="password" id="snapLensId" autocomplete="off" placeholder="Lens ID" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                    <input type="password" id="snapLensGroupId" autocomplete="off" placeholder="Lens Group ID" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                </div>
+                <button onclick="applyCustomLens()" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 border border-amber-300 py-2 px-3 rounded-lg text-xs font-extrabold transition">Apply Custom Lens</button>
+                <div id="snapStatus" class="rounded-lg border border-zinc-900 bg-black px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
+                    Camera Kit idle
+                </div>
+            </div>
+
             <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-4">
                 <div class="flex justify-between items-center">
-                    <label class="text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Master Teleprompter</label>
+                    <label class="text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Master Teleprompter & Deck</label>
                     <div class="flex gap-2">
                         <button onclick="switchPrompterMode('master')" id="btn-prompter-master" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-900 transition">Paste Script</button>
-                        <button onclick="switchPrompterMode('slides')" id="btn-prompter-slides" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition">Slide Sync</button>
+                        <button onclick="switchPrompterMode('slides')" id="btn-prompter-slides" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition">Slide Deck</button>
                     </div>
                 </div>
 
                 <div class="bg-black border border-zinc-900 p-4 rounded-xl space-y-2">
-                    <div id="teleprompterDisplay" class="teleprompter-text text-base font-medium text-amber-100/90 h-[160px] overflow-y-auto text-center flex flex-col items-center justify-start p-1 scroll-smooth">
-                        Paste your master script or upload slides to begin tracking hooks.
+                    <div id="teleprompterDisplay" class="teleprompter-text text-base font-medium text-amber-100/90 h-[140px] overflow-y-auto text-center flex flex-col items-center justify-start p-1 scroll-smooth">
+                        Select Slide Deck to upload presentation graphics or track copy anchors here.
                     </div>
                 </div>
 
                 <div id="prompterContainerMaster" class="space-y-2">
-                    <textarea id="masterScriptInput" oninput="updateMasterScript(this.value)" placeholder="Paste your massive, long-form live selling script here..." class="w-full h-32 bg-[#1c1c1e] text-xs p-2.5 border border-zinc-800 rounded-md text-zinc-300 focus:outline-none focus:border-zinc-700 custom-scroll" style="resize: none;"></textarea>
+                    <textarea id="masterScriptInput" oninput="updateMasterScript(this.value)" placeholder="Paste your massive, long-form live selling script here..." class="w-full h-28 bg-[#1c1c1e] text-xs p-2.5 border border-zinc-800 rounded-md text-zinc-300 focus:outline-none focus:border-zinc-700 custom-scroll" style="resize: none;"></textarea>
                     <div class="flex gap-2">
                         <button onclick="scrollPrompter('up')" class="flex-1 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Scroll Up &#9650;</button>
                         <button onclick="scrollPrompter('down')" class="flex-1 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Scroll Down &#9660;</button>
@@ -82,16 +113,16 @@
 
                 <div id="prompterContainerSlides" class="space-y-3 hidden">
                     <div class="flex justify-between items-center text-xs text-zinc-500">
-                        <span>Slide-linked Automation</span>
+                        <span>Slide-linked Deck Manager</span>
                         <span id="slideCounter" class="font-medium">0 / 0</span>
                     </div>
-                    <button onclick="document.getElementById('slideUpload').click()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 py-2 px-3 rounded-lg text-xs font-semibold transition">Batch Upload Slides</button>
+                    <button onclick="document.getElementById('slideUpload').click()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 py-2 px-3 rounded-lg text-xs font-semibold transition">Batch Upload Slides (.JPG / .PNG)</button>
                     <input type="file" id="slideUpload" multiple accept="image/*" class="hidden" onchange="handleSlideUpload(event)">
 
                     <div id="slideList" class="max-h-36 overflow-y-auto space-y-2 pr-1 hidden"></div>
 
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="prevSlide()" class="bg-zinc-800 hover:bg-zinc-700 py-2 rounded-lg text-xs font-semibold transition">&#9664; Previous</button>
+                        <button onclick="prevSlide()" class="bg-zinc-800 hover:bg-zinc-700 py-2 rounded-lg text-xs font-semibold transition">&#9664; Previous Slide</button>
                         <button onclick="nextSlide()" class="bg-zinc-800 hover:bg-zinc-700 py-2 rounded-lg text-xs font-semibold transition">Next Slide &#9654;</button>
                     </div>
                 </div>
@@ -102,9 +133,10 @@
                 <div class="space-y-2">
                     <input type="text" id="prodName" placeholder="Product Name (e.g., The Dollhouse Brand Kit)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="prodPrice" placeholder="Offer Price (e.g., $47 today only)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
-                        <input type="text" id="prodCTA" placeholder="CTA (e.g., COMMENT 'GOLD')" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                        <input type="text" id="prodValue" placeholder="Original Value (e.g., $297)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                        <input type="text" id="prodPrice" placeholder="Live Offer (e.g., $47)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
                     </div>
+                    <input type="text" id="prodCTA" placeholder="CTA (e.g., COMMENT 'GOLD')" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-1">
@@ -119,8 +151,9 @@
 
                 <div class="grid grid-cols-2 gap-2 pt-1">
                     <button onclick="pinProduct()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-xs font-bold transition">Pin To Live Stream</button>
-                    <button onclick="clearProduct()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 py-2 rounded-lg text-xs font-semibold transition">Clear Banner</button>
+                    <button onclick="copyPinnedComment()" class="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 py-2 rounded-lg text-xs font-bold transition">📋 Copy Pinned Comment</button>
                 </div>
+                <button onclick="clearProduct()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 py-2 rounded-lg text-xs font-semibold transition">Clear Banner</button>
 
                 <div class="pt-2 border-t border-zinc-900 space-y-2">
                     <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Urgency Countdown Timer (Minutes)</label>
@@ -132,29 +165,41 @@
                 </div>
             </div>
 
-            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
-                <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Webcam Frame Overlay Configuration</label>
-                <div>
-                    <select id="cameraShape" onchange="updateCameraShape(this.value)" class="w-full bg-[#1c1c1e] border border-zinc-850 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-zinc-700">
-                        <option value="square">Standard Square Layout</option>
-                        <option value="rounded">Rounded Geometric Rectangle</option>
-                        <option value="circle">Sleek Circular Mask</option>
-                        <option value="heart">Interactive Heart Outline</option>
-                    </select>
+            <div id="overlaySettingsContainer" class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+                <label class="block text-[11px] uppercase font-bold text-amber-400 tracking-wider">Your Separate Webcam Box Position</label>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] text-zinc-500 mb-1">Box Frame Shape</label>
+                        <select id="cameraShape" onchange="updateCameraShape(this.value)" class="w-full bg-[#1c1c1e] border border-zinc-850 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none">
+                            <option value="square">Standard Square</option>
+                            <option value="rounded">Rounded Rectangle</option>
+                            <option value="circle">Sleek Circle Mask</option>
+                            <option value="heart">Heart Accent</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-zinc-500 mb-1">Preset Placements</label>
+                        <select onchange="applyPositionPreset(this.value)" class="w-full bg-[#1c1c1e] border border-zinc-850 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none">
+                            <option value="bottom">Bottom Center</option>
+                            <option value="top">Top Center</option>
+                            <option value="center">Dead Center</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div id="overlaySliders" class="space-y-2.5 pt-1">
-                    <div class="flex justify-between text-[11px] text-zinc-400"><span>Overlay Scale Matrix</span><span id="val-size">420px</span></div>
-                    <input type="range" min="200" max="800" value="420" oninput="updateOverlay('size', this.value)" class="w-full accent-zinc-400">
+                <div class="space-y-2.5 pt-1">
+                    <div class="flex justify-between text-[11px] text-zinc-400"><span>Box Dimensions Scale</span><span id="val-size">420px</span></div>
+                    <input id="range-size" type="range" min="200" max="800" value="420" oninput="updateOverlay('size', this.value)" class="w-full accent-zinc-400">
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <div class="flex justify-between text-[11px] text-zinc-400"><span>Position X</span><span id="val-x">540</span></div>
-                            <input type="range" min="0" max="1080" value="540" oninput="updateOverlay('x', this.value)" class="w-full accent-zinc-400">
+                            <div class="flex justify-between text-[11px] text-zinc-400"><span>Move Box X</span><span id="val-x">540</span></div>
+                            <input id="range-x" type="range" min="0" max="1080" value="540" oninput="updateOverlay('x', this.value)" class="w-full accent-zinc-400">
                         </div>
                         <div>
-                            <div class="flex justify-between text-[11px] text-zinc-400"><span>Position Y</span><span id="val-y">1440</span></div>
-                            <input type="range" min="0" max="1920" value="1440" oninput="updateOverlay('y', this.value)" class="w-full accent-zinc-400">
+                            <div class="flex justify-between text-[11px] text-zinc-400"><span>Move Box Y</span><span id="val-y">1260</span></div>
+                            <input id="range-y" type="range" min="0" max="1260" value="1260" oninput="updateOverlay('y', this.value)" class="w-full accent-zinc-400">
                         </div>
                     </div>
                 </div>
@@ -177,19 +222,26 @@
         </div>
     </div>
 
-    <video id="rawWebcam" autoplay playsinline style="display:none;"></video>
-
     <script>
         const canvas = document.getElementById('liveCanvas');
         const ctx = canvas.getContext('2d');
         const video = document.getElementById('rawWebcam');
         const cameraSelect = document.getElementById('cameraSourceSelect');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const snapStatus = document.getElementById('snapStatus');
+        const snapFilterToggle = document.getElementById('snapFilterToggle');
 
         let viewMode = 'presentation';
         let currentShape = 'square';
-        let overlayConfig = { size: 420, x: 540, y: 1440 };
+        let overlayConfig = { size: 420, x: 540, y: 1260 };
         let prompterMode = 'master';
         let currentStream = null;
+        let snapModule = null;
+        let snapCameraKit = null;
+        let snapSession = null;
+        let snapOutputCanvas = null;
+        let snapActiveLens = null;
+        let snapFiltersEnabled = false;
 
         let uploadedSlides = [];
         let activeSlideIndex = 0;
@@ -214,6 +266,7 @@
             }
 
             try {
+                cameraStatus.innerText = 'Requesting camera permission';
                 currentStream = await navigator.mediaDevices.getUserMedia({
                     video: deviceId
                         ? { deviceId: { exact: deviceId }, width: 1280, height: 720 }
@@ -222,14 +275,21 @@
                 });
                 video.srcObject = currentStream;
                 await video.play();
+                const activeLabel = currentStream.getVideoTracks()[0]?.label || 'Camera connected';
+                cameraStatus.innerText = activeLabel;
+                if (snapSession && snapFiltersEnabled) {
+                    await routeStreamThroughSnap();
+                }
             } catch (err) {
                 console.warn("Camera streaming fallback link.", err);
+                cameraStatus.innerText = 'Camera blocked or unavailable';
             }
         }
 
         async function loadCameraDevices() {
             if (!navigator.mediaDevices?.getUserMedia || !navigator.mediaDevices?.enumerateDevices) {
                 cameraSelect.innerHTML = '<option value="">Camera API unavailable</option>';
+                cameraStatus.innerText = 'Open this page from localhost for camera access';
                 return;
             }
 
@@ -242,6 +302,7 @@
             cameraSelect.innerHTML = '';
             if (!cameras.length) {
                 cameraSelect.innerHTML = '<option value="">No cameras detected</option>';
+                cameraStatus.innerText = 'No camera sources detected';
                 return;
             }
 
@@ -261,39 +322,164 @@
             startCamera(deviceId);
         }
 
+        async function loadSnapModule() {
+            if (snapModule) return snapModule;
+
+            try {
+                snapModule = await import('https://unpkg.com/@snap/camera-kit/dist/index.js');
+                return snapModule;
+            } catch (err) {
+                console.error('Unable to load Camera Kit Web SDK.', err);
+                snapStatus.innerText = 'Camera Kit SDK failed to load';
+                throw err;
+            }
+        }
+
+        async function ensureSnapSession() {
+            const apiToken = document.getElementById('snapApiToken').value.trim();
+            if (!apiToken) {
+                snapStatus.innerText = 'Add your API token first';
+                throw new Error('Missing Snap Camera Kit API token');
+            }
+
+            const kit = await loadSnapModule();
+            if (!snapCameraKit) {
+                snapStatus.innerText = 'Bootstrapping Camera Kit';
+                snapCameraKit = await kit.bootstrapCameraKit({ apiToken });
+            }
+
+            if (!snapSession) {
+                snapOutputCanvas = document.createElement('canvas');
+                snapOutputCanvas.width = 1280;
+                snapOutputCanvas.height = 720;
+                snapSession = await snapCameraKit.createSession({ liveRenderTarget: snapOutputCanvas });
+                snapSession.events.addEventListener('error', (event) => {
+                    console.error('Camera Kit session error:', event.detail?.error || event);
+                    snapStatus.innerText = 'Snap lens error - removed by SDK';
+                    snapActiveLens = null;
+                });
+            }
+
+            return { kit, session: snapSession };
+        }
+
+        async function routeStreamThroughSnap() {
+            if (!currentStream) {
+                snapStatus.innerText = 'Start camera before applying lens';
+                return;
+            }
+
+            const { kit, session } = await ensureSnapSession();
+            const source = kit.createMediaStreamSource(currentStream, {
+                transform: kit.Transform2D?.MirrorX,
+                cameraType: 'front'
+            });
+            await session.setSource(source);
+            await session.play('live');
+            snapFiltersEnabled = true;
+            snapFilterToggle.checked = true;
+            snapStatus.innerText = snapActiveLens ? 'Snap lens live' : 'Snap processor live';
+        }
+
+        async function applyCustomLens() {
+            const lensId = document.getElementById('snapLensId').value.trim();
+            const lensGroupId = document.getElementById('snapLensGroupId').value.trim();
+
+            if (!lensId || !lensGroupId) {
+                snapStatus.innerText = 'Lens ID and Lens Group ID required';
+                return;
+            }
+
+            try {
+                snapStatus.innerText = 'Loading custom lens';
+                const { session } = await ensureSnapSession();
+                await routeStreamThroughSnap();
+                const lens = await snapCameraKit.lensRepository.loadLens(lensId, lensGroupId);
+                const applied = await session.applyLens(lens);
+                snapActiveLens = applied === false ? null : lens;
+                snapFiltersEnabled = applied !== false;
+                snapFilterToggle.checked = snapFiltersEnabled;
+                snapStatus.innerText = snapFiltersEnabled ? 'Custom Snap lens applied' : 'Lens apply interrupted';
+            } catch (err) {
+                console.error('Unable to apply Snap lens.', err);
+                snapStatus.innerText = 'Unable to apply Snap lens';
+                snapFiltersEnabled = false;
+                snapFilterToggle.checked = false;
+            }
+        }
+
+        async function toggleSnapFilters(enabled) {
+            snapFiltersEnabled = enabled;
+
+            if (!enabled) {
+                try {
+                    if (snapSession && snapActiveLens) {
+                        await snapSession.removeLens();
+                    }
+                    if (snapSession) {
+                        await snapSession.pause('live');
+                    }
+                } catch (err) {
+                    console.warn('Unable to pause Snap Camera Kit session.', err);
+                }
+                snapActiveLens = null;
+                snapStatus.innerText = 'Snap filters off - raw camera live';
+                return;
+            }
+
+            try {
+                await routeStreamThroughSnap();
+                if (document.getElementById('snapLensId').value.trim()) {
+                    await applyCustomLens();
+                }
+            } catch (err) {
+                console.error('Unable to enable Snap filters.', err);
+                snapFiltersEnabled = false;
+                snapFilterToggle.checked = false;
+                snapStatus.innerText = 'Unable to enable Snap filters';
+            }
+        }
+
+        syncOverlayControls();
         loadCameraDevices();
         requestAnimationFrame(renderLoop);
 
         function renderLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cameraReady = video.readyState >= 2 && video.videoWidth > 0;
+            const snapReady = snapFiltersEnabled && snapOutputCanvas && snapOutputCanvas.width > 0;
+            const activeCameraSource = snapReady ? snapOutputCanvas : video;
+            const activeCameraReady = snapReady || cameraReady;
 
             if (viewMode === 'presentation') {
+                renderLuxuryStageBackground();
+
                 if (uploadedSlides.length > 0 && slideImageObj.src) {
                     ctx.drawImage(slideImageObj, 0, 0, canvas.width, canvas.height);
+                    renderStageVignette();
                 } else {
-                    ctx.fillStyle = '#111113';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = '#3f3f46';
-                    ctx.font = 'bold 32px system-ui';
-                    ctx.textAlign = 'center';
-                    ctx.fillText("READY TO LIVE LAUNCH", canvas.width / 2, canvas.height / 2 - 20);
-                    ctx.font = '22px system-ui';
-                    ctx.fillStyle = '#27272a';
-                    ctx.fillText("Upload your product pitch deck slides", canvas.width / 2, canvas.height / 2 + 25);
+                    renderStageIntro();
                 }
 
                 ctx.save();
                 applyClippingMask(ctx, overlayConfig.x, overlayConfig.y, overlayConfig.size);
-                try {
-                    ctx.drawImage(video, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size);
-                } catch(e) {}
+                if (activeCameraReady) {
+                    ctx.drawImage(activeCameraSource, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size);
+                } else {
+                    renderCameraPlaceholder(overlayConfig.x, overlayConfig.y, overlayConfig.size);
+                }
                 ctx.restore();
+                renderCameraFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
             } else {
-                try {
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                } catch(e) {
-                    ctx.fillStyle = '#0b0b0c';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (activeCameraReady) {
+                    ctx.drawImage(activeCameraSource, 0, 0, canvas.width, canvas.height);
+                    renderStageVignette();
+                } else {
+                    renderLuxuryStageBackground();
+                    renderCenteredStageMessage(
+                        "CAMERA PREVIEW WAITING",
+                        "Allow camera access or pick a Snapchat virtual camera"
+                    );
                 }
             }
 
@@ -310,7 +496,179 @@
                 buyerAlertTimer--;
             }
 
+            renderConversionFooter();
             requestAnimationFrame(renderLoop);
+        }
+
+        function renderLuxuryStageBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#0B0B0C');
+            gradient.addColorStop(0.52, '#121214');
+            gradient.addColorStop(1, '#070708');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(212, 163, 89, 0.06)';
+            ctx.lineWidth = 1;
+            const grid = 72;
+            for (let x = 0; x <= canvas.width; x += grid) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= canvas.height; y += grid) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+            ctx.lineWidth = 2;
+            for (let x = 0; x <= canvas.width; x += grid * 4) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= canvas.height; y += grid * 4) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            renderStageVignette();
+        }
+
+        function renderStageVignette() {
+            const vignette = ctx.createRadialGradient(
+                canvas.width / 2,
+                canvas.height / 2,
+                canvas.width * 0.18,
+                canvas.width / 2,
+                canvas.height / 2,
+                canvas.height * 0.68
+            );
+            vignette.addColorStop(0, 'rgba(255, 255, 255, 0)');
+            vignette.addColorStop(0.72, 'rgba(0, 0, 0, 0.08)');
+            vignette.addColorStop(1, 'rgba(0, 0, 0, 0.54)');
+            ctx.fillStyle = vignette;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function renderStageIntro() {
+            renderCenteredStageMessage(
+                "READY TO LIVE LAUNCH",
+                "Upload slides below to fill this luxury commerce stage"
+            );
+        }
+
+        function renderConversionFooter() {
+            const margin = 42;
+            const footerHeight = 118;
+            const footerY = canvas.height - footerHeight - 28;
+            const footerWidth = canvas.width - margin * 2;
+            const footerText = 'STEP 1: TAP PROFILE PIC  •  STEP 2: CLICK LINK IN BIO  •  STEP 3: SECURE SPECIAL OFFER BEFORE TIMER HITS 0';
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.strokeStyle = 'rgba(212, 163, 89, 0.28)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(margin, footerY, footerWidth, footerHeight, 24);
+            ctx.fill();
+            ctx.stroke();
+
+            const gloss = ctx.createLinearGradient(0, footerY, 0, footerY + footerHeight);
+            gloss.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+            gloss.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = gloss;
+            ctx.beginPath();
+            ctx.roundRect(margin + 1, footerY + 1, footerWidth - 2, footerHeight - 2, 23);
+            ctx.fill();
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#F4F4F5';
+            setFittedFont(footerText, '850', 27, 'system-ui', footerWidth - 44, 17);
+            ctx.fillText(footerText, canvas.width / 2, footerY + 70);
+            ctx.restore();
+        }
+
+        function renderCenteredStageMessage(title, subtitle) {
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#d4a359';
+            ctx.font = '700 18px ui-monospace, SFMono-Regular, Menlo, monospace';
+            ctx.fillText('THE DOLLHOUSE LIVE COMMERCE STUDIO', canvas.width / 2, canvas.height / 2 - 88);
+            ctx.fillStyle = '#f4f4f5';
+            ctx.font = '800 34px system-ui';
+            ctx.fillText(title, canvas.width / 2, canvas.height / 2 - 22);
+            ctx.fillStyle = '#71717a';
+            ctx.font = '500 22px system-ui';
+            ctx.fillText(subtitle, canvas.width / 2, canvas.height / 2 + 28);
+            ctx.restore();
+        }
+
+        function setFittedFont(text, weight, size, family, maxWidth, minSize = 18) {
+            let currentSize = size;
+            do {
+                ctx.font = `${weight} ${currentSize}px ${family}`;
+                if (ctx.measureText(text).width <= maxWidth || currentSize <= minSize) {
+                    return currentSize;
+                }
+                currentSize -= 2;
+            } while (currentSize >= minSize);
+            return currentSize;
+        }
+
+        function renderCameraPlaceholder(x, y, size) {
+            ctx.fillStyle = '#050506';
+            ctx.fillRect(x - size / 2, y - size / 2, size, size);
+            ctx.fillStyle = '#27272a';
+            ctx.fillRect(x - size / 2 + 12, y - size / 2 + 12, size - 24, size - 24);
+            ctx.fillStyle = '#f4f4f5';
+            ctx.font = 'bold 28px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText("CAMERA PREVIEW", x, y - 12);
+            ctx.font = '20px system-ui';
+            ctx.fillStyle = '#a1a1aa';
+            ctx.fillText("Waiting for Snapchat feed", x, y + 24);
+        }
+
+        function renderCameraFrame(x, y, size) {
+            ctx.save();
+            const ring = ctx.createLinearGradient(x - size / 2, y - size / 2, x + size / 2, y + size / 2);
+            ring.addColorStop(0, 'rgba(251, 191, 36, 0.95)');
+            ring.addColorStop(0.45, 'rgba(212, 163, 89, 0.6)');
+            ring.addColorStop(1, 'rgba(244, 63, 94, 0.45)');
+            ctx.shadowColor = 'rgba(212, 163, 89, 0.42)';
+            ctx.shadowBlur = 24;
+            ctx.strokeStyle = ring;
+            ctx.lineWidth = 7;
+            ctx.beginPath();
+            if (currentShape === 'circle') {
+                ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+            } else if (currentShape === 'rounded') {
+                ctx.roundRect(x - size / 2, y - size / 2, size, size, 40);
+            } else if (currentShape === 'heart') {
+                const top = y - size / 2;
+                const left = x - size / 2;
+                ctx.moveTo(x, top + size * 0.3);
+                ctx.bezierCurveTo(x - size * 0.35, top, left, top + size * 0.45, x, top + size);
+                ctx.bezierCurveTo(x + size, top + size * 0.45, x + size * 0.35, top, x, top + size * 0.3);
+            } else {
+                ctx.rect(x - size / 2, y - size / 2, size, size);
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
         }
 
         function applyClippingMask(context, x, y, size) {
@@ -330,37 +688,129 @@
             context.clip();
         }
 
-        function renderProductBanner() {
-            const margin = 50;
-            const bannerWidth = canvas.width - (margin * 2);
-            const bannerHeight = 220;
-            const topY = 80;
+        function applyPositionPreset(preset) {
+            if (preset === 'bottom') {
+                overlayConfig.x = 540;
+                overlayConfig.y = getOverlayMaxY();
+            } else if (preset === 'top') {
+                overlayConfig.x = 540;
+                overlayConfig.y = 480;
+            } else if (preset === 'center') {
+                overlayConfig.x = 540;
+                overlayConfig.y = 960;
+            }
 
-            ctx.fillStyle = 'rgba(10, 10, 12, 0.96)';
-            ctx.strokeStyle = 'rgba(212, 163, 89, 0.4)';
-            ctx.lineWidth = 4;
+            syncOverlayControls();
+        }
+
+        function renderProductBanner() {
+            const margin = Math.max(46, canvas.width * 0.046);
+            const bannerWidth = canvas.width - (margin * 2);
+            const bannerHeight = 302;
+            const topY = 180;
+            const radius = 28;
+            const leftX = margin + 44;
+            const rightX = canvas.width - margin - 44;
+            const splitX = margin + bannerWidth * 0.62;
+            const leftMax = splitX - leftX - 34;
+            const rightMax = rightX - splitX;
+            const titleY = topY + 70;
+            const valueY = topY + 130;
+            const offerY = topY + 214;
+
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.44)';
+            ctx.shadowBlur = 28;
+            ctx.shadowOffsetY = 14;
+            ctx.fillStyle = '#0A0A0C';
+            ctx.strokeStyle = 'rgba(212, 163, 89, 0.35)';
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.roundRect(margin, topY, bannerWidth, bannerHeight, 28);
+            ctx.roundRect(margin, topY, bannerWidth, bannerHeight, radius);
             ctx.fill();
             ctx.stroke();
+            ctx.restore();
+
+            const topGloss = ctx.createLinearGradient(0, topY, 0, topY + bannerHeight);
+            topGloss.addColorStop(0, 'rgba(255, 255, 255, 0.09)');
+            topGloss.addColorStop(0.16, 'rgba(255, 255, 255, 0.025)');
+            topGloss.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = topGloss;
+            ctx.beginPath();
+            ctx.roundRect(margin + 2, topY + 2, bannerWidth - 4, bannerHeight - 4, radius - 2);
+            ctx.fill();
 
             ctx.textAlign = 'left';
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 44px system-ui';
-            ctx.fillText(activeProduct.name.toUpperCase(), margin + 45, topY + 75);
+            const titleText = activeProduct.name.toUpperCase();
+            setFittedFont(titleText, '800', 42, 'system-ui', leftMax, 28);
+            ctx.fillText(titleText, leftX, titleY);
 
-            ctx.fillStyle = '#34d399';
-            ctx.font = 'bold 48px system-ui';
-            ctx.fillText(activeProduct.price, margin + 45, topY + 150);
+            const originalValue = activeProduct.value || '$297';
+            const valueText = `ORIGINAL VALUE ${originalValue}`.toUpperCase();
+            ctx.fillStyle = '#a1a1aa';
+            setFittedFont(valueText, '700', 29, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 19);
+            ctx.fillText(valueText, leftX, valueY);
+
+            const originalMetrics = ctx.measureText(valueText);
+            ctx.strokeStyle = '#F43F5E';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(leftX, valueY - 10);
+            ctx.lineTo(leftX + originalMetrics.width, valueY - 10);
+            ctx.stroke();
+
+            const liveOffer = activeProduct.price || 'LIVE OFFER';
+            const badgeText = "TODAY'S LIVE SPECIAL ONLY";
+            const badgeWidth = 314;
+            const badgeHeight = 48;
+            const priceMax = Math.max(160, leftMax - badgeWidth - 32);
+            ctx.fillStyle = '#34D399';
+            setFittedFont(liveOffer, '900', 64, 'system-ui', priceMax, 38);
+            ctx.fillText(liveOffer, leftX, offerY);
+
+            const liveMetrics = ctx.measureText(liveOffer);
+            const badgeX = Math.min(leftX + liveMetrics.width + 28, splitX - badgeWidth - 16);
+            const badgeY = offerY - 42;
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
+            ctx.strokeStyle = 'rgba(212, 163, 89, 0.72)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#FBBF24';
+            ctx.font = '800 18px ui-monospace, SFMono-Regular, Menlo, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(badgeText, badgeX + badgeWidth / 2, badgeY + 30);
+
+            ctx.strokeStyle = 'rgba(212, 163, 89, 0.18)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(splitX, topY + 46);
+            ctx.lineTo(splitX, topY + bannerHeight - 46);
+            ctx.stroke();
 
             ctx.textAlign = 'right';
+            const ctaText = activeProduct.cta || "COMMENT 'BUY' TO UNLOCK LINK";
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 36px system-ui';
-            ctx.fillText(activeProduct.cta || "COMMENT 'BUY' TO UNLOCK LINK", canvas.width - margin - 45, topY + 95);
+            setFittedFont(ctaText, '850', 32, 'system-ui', rightMax, 20);
+            ctx.fillText(ctaText, rightX, topY + 100);
 
-            ctx.fillStyle = '#f43f5e';
-            ctx.font = 'bold 28px monospace';
-            ctx.fillText(`⚠️ ONLY ${activeProduct.stock} COPIES LEFT`, canvas.width - margin - 45, topY + 155);
+            const expireText = 'ENDS WHEN TIMER HITS ZERO';
+            ctx.fillStyle = '#FBBF24';
+            setFittedFont(expireText, '800', 23, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 16);
+            ctx.fillText(expireText, rightX, topY + 150);
+
+            const stockText = `⚠ ONLY ${activeProduct.stock} COPIES LEFT`;
+            ctx.fillStyle = '#F43F5E';
+            setFittedFont(stockText, '900', 30, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 18);
+            ctx.fillText(stockText, rightX, topY + 206);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.46)';
+            ctx.font = '700 16px ui-monospace, SFMono-Regular, Menlo, monospace';
+            ctx.fillText('SECURE YOUR SPOT BEFORE THE LIVE CLOSES', rightX, topY + 252);
         }
 
         function renderLiveTimer() {
@@ -371,19 +821,20 @@
             ctx.save();
             ctx.fillStyle = 'rgba(244, 63, 94, 0.95)';
             ctx.beginPath();
-            ctx.roundRect(canvas.width - 250, 320, 200, 75, 18);
+            const timerY = activeProduct ? 510 : 320;
+            ctx.roundRect(canvas.width - 250, timerY, 200, 75, 18);
             ctx.fill();
 
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 38px monospace';
             ctx.textAlign = 'center';
-            ctx.fillText(timerStr, canvas.width - 150, 372);
+            ctx.fillText(timerStr, canvas.width - 150, timerY + 52);
             ctx.restore();
         }
 
         function renderSoldSocialProofCard() {
             const margin = 50;
-            const cardY = 420;
+            const cardY = activeProduct ? 620 : 420;
             const cardW = canvas.width - (margin * 2);
             const cardH = 110;
 
@@ -435,16 +886,74 @@
 
         function pinProduct() {
             const name = document.getElementById('prodName').value;
+            const value = document.getElementById('prodValue').value;
             const price = document.getElementById('prodPrice').value;
             const cta = document.getElementById('prodCTA').value;
             const stock = document.getElementById('prodStock').value || '10';
 
             if(!name) return alert("Please enter a digital product name to showcase!");
-            activeProduct = { name, price, cta, stock };
+            activeProduct = { name, value, price, cta, stock };
+        }
+
+        async function copyPinnedComment() {
+            const name = document.getElementById('prodName').value || activeProduct?.name || 'this offer';
+            const price = document.getElementById('prodPrice').value || activeProduct?.price || 'the live price';
+            const value = document.getElementById('prodValue').value || activeProduct?.value || 'the full value';
+            const comment = `💥 LIVE PRICE DROP: Grab the ${name} right now for just ${price} (Value: ${value})! Limited Live Stock left! Tap my profile bubble ➔ click the link in bio to lock yours in before the timer expires! 🛒🔥`;
+
+            try {
+                await navigator.clipboard.writeText(comment);
+            } catch (err) {
+                const temp = document.createElement('textarea');
+                temp.value = comment;
+                temp.setAttribute('readonly', '');
+                temp.style.position = 'fixed';
+                temp.style.opacity = '0';
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+            }
+
+            triggerAlert('gift', 'Pinned Comment', 'Copied');
         }
 
         function clearProduct() {
             activeProduct = null;
+        }
+
+        async function resetStudioEngine() {
+            setViewMode('camera');
+            activeProduct = null;
+            countdownTimeRemaining = 0;
+            buyerAlertTimer = 0;
+            recentBuyerName = null;
+            clearInterval(countdownTimerInterval);
+            countdownTimerInterval = null;
+            snapFiltersEnabled = false;
+            snapActiveLens = null;
+            snapFilterToggle.checked = false;
+
+            try {
+                if (snapSession) {
+                    await snapSession.removeLens();
+                    await snapSession.pause('live');
+                }
+            } catch (err) {
+                console.warn('Snap reset skipped.', err);
+            }
+
+            const alertEl = document.getElementById('canvasAlert');
+            alertEl.innerText = '';
+            alertEl.style.opacity = '0';
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+            if (!currentStream) {
+                await startCamera(cameraSelect.value);
+            }
+            snapStatus.innerText = 'Studio reset - raw camera live';
+            cameraStatus.innerText = currentStream ? (currentStream.getVideoTracks()[0]?.label || 'Camera connected') : 'Waiting for camera permission';
         }
 
         function dropStock() {
@@ -482,14 +991,36 @@
             viewMode = mode;
             document.getElementById('btn-mode-pres').className = mode === 'presentation' ? 'py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-100 text-zinc-900 transition' : 'py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition';
             document.getElementById('btn-mode-cam').className = mode === 'camera' ? 'py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-100 text-zinc-900 transition' : 'py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition';
-            document.getElementById('overlaySliders').style.display = mode === 'presentation' ? 'block' : 'none';
+            document.getElementById('overlaySettingsContainer').style.display = mode === 'presentation' ? 'block' : 'none';
         }
 
         function updateCameraShape(shape) { currentShape = shape; }
 
+        function getOverlayMaxY() {
+            return Math.floor(canvas.height - 450 - overlayConfig.size / 2);
+        }
+
+        function syncOverlayControls() {
+            const maxY = getOverlayMaxY();
+            const rangeY = document.getElementById('range-y');
+            overlayConfig.y = Math.min(overlayConfig.y, maxY);
+            rangeY.max = maxY;
+            document.getElementById('range-size').value = overlayConfig.size;
+            document.getElementById('range-x').value = overlayConfig.x;
+            rangeY.value = overlayConfig.y;
+            document.getElementById('val-size').innerText = `${overlayConfig.size}px`;
+            document.getElementById('val-x').innerText = overlayConfig.x;
+            document.getElementById('val-y').innerText = overlayConfig.y;
+        }
+
         function updateOverlay(prop, val) {
             overlayConfig[prop] = parseInt(val);
-            document.getElementById(`val-${prop}`).innerText = val + (prop === 'size' ? 'px' : '');
+            if (prop === 'size') {
+                overlayConfig.y = Math.min(overlayConfig.y, getOverlayMaxY());
+            } else if (prop === 'y') {
+                overlayConfig.y = Math.min(overlayConfig.y, getOverlayMaxY());
+            }
+            syncOverlayControls();
         }
 
         function handleSlideUpload(event) {
