@@ -492,6 +492,13 @@
                 return;
             }
 
+            if (getEnvironmentLabel() === 'FILE ERROR') {
+                snapStatus.innerText = 'Use localhost - Camera Kit blocks file URLs';
+                snapLensSelect.innerHTML = '<option value="">Open localhost URL first</option>';
+                await fallbackToRawCamera('Camera Kit requires localhost or HTTPS; file URL blocked.');
+                return;
+            }
+
             try {
                 snapStatus.innerText = 'Loading lens group';
                 await ensureSnapSession();
@@ -504,7 +511,7 @@
 
                 if (!snapAvailableLenses.length) {
                     snapLensSelect.innerHTML = '<option value="">No lenses found in group</option>';
-                    snapStatus.innerText = 'No lenses found in group';
+                    snapStatus.innerText = errors?.length ? 'Lens group blocked or unavailable' : 'No lenses found in group';
                     return;
                 }
 
@@ -518,7 +525,8 @@
                 snapStatus.innerText = `${snapAvailableLenses.length} Snap lenses ready`;
             } catch (err) {
                 console.warn('Unable to load Snap lens group.', err);
-                snapStatus.innerText = 'Unable to load lens group';
+                snapStatus.innerText = `Unable to load lens group: ${err?.message || 'check token/origin'}`;
+                snapLensSelect.innerHTML = '<option value="">Check token, group ID, and localhost</option>';
                 await fallbackToRawCamera('Snap lens group load failed; routing raw webcam.');
             }
         }
