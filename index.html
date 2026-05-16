@@ -8,7 +8,17 @@
     <script type="module" src="https://unpkg.com/@snap/camera-kit/dist/index.js"></script>
     <style>
         body { background-color: #0b0b0c; color: #f4f4f5; font-family: system-ui, sans-serif; }
-        .teleprompter-text { font-family: Georgia, serif; line-height: 1.6; }
+        .teleprompter-text {
+            font-family: Georgia, serif;
+            font-size: 1.08rem;
+            line-height: 1.78;
+            max-width: 280px;
+            margin: 0 auto;
+            padding-top: 0;
+            text-align: center;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0b0b0c; }
         ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
@@ -20,6 +30,10 @@
     <div class="flex-1 h-full flex flex-col items-center justify-center bg-[#121214] p-6 border-r border-[#27272a]">
         <div class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
             <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span> 9:16 Live Stream Monitor (Slides Background + Floating Camera Box)
+        </div>
+        <div class="mb-3 flex flex-wrap items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider">
+            <span id="feedStatusBadge" class="rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400">FEED: RAW WEBCAM</span>
+            <span id="environmentStatusBadge" class="rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400">ENVIRONMENT: CHECKING</span>
         </div>
 
         <div class="relative shadow-2xl border border-zinc-800 rounded-2xl overflow-hidden bg-black flex" style="height: 82vh; aspect-ratio: 9/16;">
@@ -98,7 +112,7 @@
                 </div>
 
                 <div class="bg-black border border-zinc-900 p-4 rounded-xl space-y-2">
-                    <div id="teleprompterDisplay" class="teleprompter-text text-base font-medium text-amber-100/90 h-[140px] overflow-y-auto text-center flex flex-col items-center justify-start p-1 scroll-smooth">
+                    <div id="teleprompterDisplay" class="teleprompter-text font-medium text-amber-100/90 h-[140px] overflow-y-auto flex flex-col scroll-smooth">
                         Select Slide Deck to upload presentation graphics or track copy anchors here.
                     </div>
                 </div>
@@ -153,10 +167,21 @@
                     <button onclick="pinProduct()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-xs font-bold transition">Pin To Live Stream</button>
                     <button onclick="copyPinnedComment()" class="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 py-2 rounded-lg text-xs font-bold transition">📋 Copy Pinned Comment</button>
                 </div>
-                <button onclick="clearProduct()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 py-2 rounded-lg text-xs font-semibold transition">Clear Banner</button>
+                <div id="copyPinnedFeedback" class="hidden rounded-lg border border-emerald-900/50 bg-emerald-950/30 px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider text-emerald-300">Copied to Clipboard!</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="toggleOfferBanner()" id="btn-toggle-offer" class="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 py-2 rounded-lg text-xs font-bold transition">👁️ Hide Banner</button>
+                    <button onclick="clearProduct()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 py-2 rounded-lg text-xs font-semibold transition">Clear Banner</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="saveOfferPreset()" class="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 py-2 rounded-lg text-xs font-bold transition">💾 Save Current Offer Preset</button>
+                    <button onclick="loadOfferPreset()" class="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 py-2 rounded-lg text-xs font-bold transition">📂 Load Saved Preset</button>
+                </div>
 
                 <div class="pt-2 border-t border-zinc-900 space-y-2">
-                    <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Urgency Countdown Timer (Minutes)</label>
+                    <div class="flex items-center justify-between gap-3">
+                        <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Urgency Countdown Timer (Minutes)</label>
+                        <span id="sidebarTimerDisplay" class="font-mono text-xs font-bold text-amber-300">0:00</span>
+                    </div>
                     <div class="flex gap-2">
                         <input type="number" id="timerDuration" value="5" min="1" max="60" class="w-20 bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-center text-zinc-200 focus:outline-none">
                         <button onclick="startCountdown()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold py-1.5 rounded-lg border border-zinc-700 transition">Start Timer</button>
@@ -207,6 +232,10 @@
 
             <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
                 <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Stream Interaction Test Suite</label>
+                <label class="flex items-center gap-2 rounded-lg border border-zinc-800 bg-black px-3 py-2 text-[11px] font-bold text-zinc-400">
+                    <input id="muteVoiceAnnouncements" type="checkbox" class="h-4 w-4 accent-zinc-400">
+                    <span>🔇 Mute AI Voice Announcements</span>
+                </label>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="triggerAlert('follow', 'Mandy')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Follow</button>
                     <button onclick="triggerAlert('like', 'Designer')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Like</button>
@@ -230,11 +259,16 @@
         const cameraStatus = document.getElementById('cameraStatus');
         const snapStatus = document.getElementById('snapStatus');
         const snapFilterToggle = document.getElementById('snapFilterToggle');
+        const feedStatusBadge = document.getElementById('feedStatusBadge');
+        const environmentStatusBadge = document.getElementById('environmentStatusBadge');
+        const sidebarTimerDisplay = document.getElementById('sidebarTimerDisplay');
+        const muteVoiceAnnouncements = document.getElementById('muteVoiceAnnouncements');
 
         let viewMode = 'presentation';
         let currentShape = 'square';
         let overlayConfig = { size: 420, x: 540, y: 1260 };
         let prompterMode = 'master';
+        let offerBannerVisible = true;
         let currentStream = null;
         let snapModule = null;
         let snapCameraKit = null;
@@ -266,6 +300,34 @@
             sold: new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-84.wav')
         };
 
+        function getEnvironmentLabel() {
+            const protocol = window.location.protocol;
+            const host = window.location.hostname;
+            if (protocol === 'https:') return 'HTTPS';
+            if (host === 'localhost' || host === '127.0.0.1') return 'LOCALHOST';
+            return 'FILE ERROR';
+        }
+
+        function updateStatusBadges() {
+            const snapActive = snapFiltersEnabled && snapOutputCanvas;
+            feedStatusBadge.innerText = snapActive ? 'FEED: SNAP FILTER ACTIVE' : 'FEED: RAW WEBCAM';
+            feedStatusBadge.className = snapActive
+                ? 'rounded-full border border-emerald-700/70 bg-emerald-950/30 px-3 py-1 text-emerald-300'
+                : 'rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400';
+
+            const environmentLabel = getEnvironmentLabel();
+            environmentStatusBadge.innerText = `ENVIRONMENT: ${environmentLabel}`;
+            environmentStatusBadge.className = environmentLabel === 'FILE ERROR'
+                ? 'rounded-full border border-red-800/70 bg-red-950/30 px-3 py-1 text-red-300'
+                : 'rounded-full border border-amber-700/60 bg-amber-950/20 px-3 py-1 text-amber-300';
+        }
+
+        function formatCountdown(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
         async function startCamera(deviceId = '') {
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
@@ -275,8 +337,8 @@
                 cameraStatus.innerText = 'Requesting camera permission';
                 currentStream = await navigator.mediaDevices.getUserMedia({
                     video: deviceId
-                        ? { deviceId: { exact: deviceId }, width: 1280, height: 720 }
-                        : { width: 1280, height: 720 },
+                        ? { deviceId: { exact: deviceId }, width: { ideal: 1080 }, height: { ideal: 1920 }, aspectRatio: { ideal: 9 / 16 } }
+                        : { width: { ideal: 1080 }, height: { ideal: 1920 }, aspectRatio: { ideal: 9 / 16 } },
                     audio: false
                 });
                 video.srcObject = currentStream;
@@ -328,6 +390,25 @@
             startCamera(deviceId);
         }
 
+        async function fallbackToRawCamera(reason = 'Snap fallback to raw webcam') {
+            console.warn(reason);
+            snapFiltersEnabled = false;
+            snapActiveLens = null;
+            snapFilterToggle.checked = false;
+            try {
+                if (snapSession) {
+                    await snapSession.pause('live');
+                }
+            } catch (err) {
+                console.warn('Unable to pause Snap session during fallback.', err);
+            }
+            if (!currentStream) {
+                await startCamera(cameraSelect.value);
+            }
+            snapStatus.innerText = 'Snap unavailable - raw webcam live';
+            updateStatusBadges();
+        }
+
         async function loadSnapModule() {
             if (snapModule) return snapModule;
 
@@ -335,8 +416,9 @@
                 snapModule = await import('https://unpkg.com/@snap/camera-kit/dist/index.js');
                 return snapModule;
             } catch (err) {
-                console.error('Unable to load Camera Kit Web SDK.', err);
+                console.warn('Unable to load Camera Kit Web SDK.', err);
                 snapStatus.innerText = 'Camera Kit SDK failed to load';
+                await fallbackToRawCamera('Camera Kit SDK load failed; routing raw webcam.');
                 throw err;
             }
         }
@@ -345,6 +427,7 @@
             const apiToken = document.getElementById('snapApiToken').value.trim();
             if (!apiToken) {
                 snapStatus.innerText = 'Add your API token first';
+                await fallbackToRawCamera('Missing Snap Camera Kit API token; routing raw webcam.');
                 throw new Error('Missing Snap Camera Kit API token');
             }
 
@@ -360,9 +443,10 @@
                 snapOutputCanvas.height = 720;
                 snapSession = await snapCameraKit.createSession({ liveRenderTarget: snapOutputCanvas });
                 snapSession.events.addEventListener('error', (event) => {
-                    console.error('Camera Kit session error:', event.detail?.error || event);
+                    console.warn('Camera Kit session error:', event.detail?.error || event);
                     snapStatus.innerText = 'Snap lens error - removed by SDK';
                     snapActiveLens = null;
+                    fallbackToRawCamera('Snap session error; routing raw webcam.');
                 });
             }
 
@@ -372,19 +456,27 @@
         async function routeStreamThroughSnap() {
             if (!currentStream) {
                 snapStatus.innerText = 'Start camera before applying lens';
+                await fallbackToRawCamera('No camera stream available for Snap; routing raw webcam.');
                 return;
             }
 
-            const { kit, session } = await ensureSnapSession();
-            const source = kit.createMediaStreamSource(currentStream, {
-                transform: kit.Transform2D?.MirrorX,
-                cameraType: 'front'
-            });
-            await session.setSource(source);
-            await session.play('live');
-            snapFiltersEnabled = true;
-            snapFilterToggle.checked = true;
-            snapStatus.innerText = snapActiveLens ? 'Snap lens live' : 'Snap processor live';
+            try {
+                const { kit, session } = await ensureSnapSession();
+                const source = kit.createMediaStreamSource(currentStream, {
+                    transform: kit.Transform2D?.MirrorX,
+                    cameraType: 'front'
+                });
+                await session.setSource(source);
+                await session.play('live');
+                snapFiltersEnabled = true;
+                snapFilterToggle.checked = true;
+                snapStatus.innerText = snapActiveLens ? 'Snap lens live' : 'Snap processor live';
+                updateStatusBadges();
+            } catch (err) {
+                console.warn('Unable to route stream through Snap.', err);
+                await fallbackToRawCamera('Snap route failed; routing raw webcam.');
+                throw err;
+            }
         }
 
         async function applyCustomLens() {
@@ -407,10 +499,9 @@
                 snapFilterToggle.checked = snapFiltersEnabled;
                 snapStatus.innerText = snapFiltersEnabled ? 'Custom Snap lens applied' : 'Lens apply interrupted';
             } catch (err) {
-                console.error('Unable to apply Snap lens.', err);
+                console.warn('Unable to apply Snap lens.', err);
                 snapStatus.innerText = 'Unable to apply Snap lens';
-                snapFiltersEnabled = false;
-                snapFilterToggle.checked = false;
+                await fallbackToRawCamera('Snap lens apply failed; routing raw webcam.');
             }
         }
 
@@ -439,14 +530,15 @@
                     await applyCustomLens();
                 }
             } catch (err) {
-                console.error('Unable to enable Snap filters.', err);
-                snapFiltersEnabled = false;
-                snapFilterToggle.checked = false;
+                console.warn('Unable to enable Snap filters.', err);
+                await fallbackToRawCamera('Snap enable failed; routing raw webcam.');
                 snapStatus.innerText = 'Unable to enable Snap filters';
             }
         }
 
         syncOverlayControls();
+        updateOfferVisibilityButton();
+        updateStatusBadges();
         loadCameraDevices();
         requestAnimationFrame(renderLoop);
 
@@ -456,6 +548,8 @@
             const snapReady = snapFiltersEnabled && snapOutputCanvas && snapOutputCanvas.width > 0;
             const activeCameraSource = snapReady ? snapOutputCanvas : video;
             const activeCameraReady = snapReady || cameraReady;
+            sidebarTimerDisplay.innerText = formatCountdown(countdownTimeRemaining);
+            updateStatusBadges();
 
             if (viewMode === 'presentation') {
                 renderLuxuryStageBackground();
@@ -470,7 +564,7 @@
                 ctx.save();
                 applyClippingMask(ctx, overlayConfig.x, overlayConfig.y, overlayConfig.size);
                 if (activeCameraReady) {
-                    ctx.drawImage(activeCameraSource, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size);
+                    drawMediaCover(activeCameraSource, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size);
                 } else {
                     renderCameraPlaceholder(overlayConfig.x, overlayConfig.y, overlayConfig.size);
                 }
@@ -478,7 +572,7 @@
                 renderCameraFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
             } else {
                 if (activeCameraReady) {
-                    ctx.drawImage(activeCameraSource, 0, 0, canvas.width, canvas.height);
+                    drawMediaCover(activeCameraSource, 0, 0, canvas.width, canvas.height);
                     renderStageVignette();
                 } else {
                     renderLuxuryStageBackground();
@@ -489,7 +583,7 @@
                 }
             }
 
-            if (activeProduct) {
+            if (activeProduct && offerBannerVisible) {
                 renderProductBanner();
             }
 
@@ -504,6 +598,34 @@
 
             renderConversionFooter();
             requestAnimationFrame(renderLoop);
+        }
+
+        function getMediaDimensions(source) {
+            const width = source.videoWidth || source.width || 0;
+            const height = source.videoHeight || source.height || 0;
+            return { width, height };
+        }
+
+        function drawMediaCover(source, targetX, targetY, targetWidth, targetHeight) {
+            const { width: sourceWidth, height: sourceHeight } = getMediaDimensions(source);
+            if (!sourceWidth || !sourceHeight || !targetWidth || !targetHeight) return;
+
+            const sourceRatio = sourceWidth / sourceHeight;
+            const targetRatio = targetWidth / targetHeight;
+            let cropX = 0;
+            let cropY = 0;
+            let cropWidth = sourceWidth;
+            let cropHeight = sourceHeight;
+
+            if (sourceRatio > targetRatio) {
+                cropWidth = sourceHeight * targetRatio;
+                cropX = (sourceWidth - cropWidth) / 2;
+            } else {
+                cropHeight = sourceWidth / targetRatio;
+                cropY = (sourceHeight - cropHeight) / 2;
+            }
+
+            ctx.drawImage(source, cropX, cropY, cropWidth, cropHeight, targetX, targetY, targetWidth, targetHeight);
         }
 
         function renderLuxuryStageBackground() {
@@ -825,9 +947,7 @@
         }
 
         function renderLiveTimer() {
-            const minutes = Math.floor(countdownTimeRemaining / 60);
-            const seconds = countdownTimeRemaining % 60;
-            const timerStr = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            const timerStr = formatCountdown(countdownTimeRemaining);
 
             ctx.save();
             ctx.fillStyle = 'rgba(244, 63, 94, 0.95)';
@@ -908,6 +1028,8 @@
 
             if(!name) return alert("Please enter a digital product name to showcase!");
             activeProduct = { name, value, price, cta, stock };
+            offerBannerVisible = true;
+            updateOfferVisibilityButton();
         }
 
         async function copyPinnedComment() {
@@ -930,7 +1052,77 @@
                 document.body.removeChild(temp);
             }
 
-            triggerAlert('gift', 'Pinned Comment', 'Copied');
+            const feedback = document.getElementById('copyPinnedFeedback');
+            feedback.classList.remove('hidden');
+            clearTimeout(feedback.hideTimer);
+            feedback.hideTimer = setTimeout(() => feedback.classList.add('hidden'), 1800);
+        }
+
+        function getOfferInputs() {
+            return {
+                name: document.getElementById('prodName').value,
+                value: document.getElementById('prodValue').value,
+                price: document.getElementById('prodPrice').value,
+                cta: document.getElementById('prodCTA').value,
+                stock: document.getElementById('prodStock').value || '15'
+            };
+        }
+
+        function setOfferInputs(offer) {
+            document.getElementById('prodName').value = offer.name || '';
+            document.getElementById('prodValue').value = offer.value || '';
+            document.getElementById('prodPrice').value = offer.price || '';
+            document.getElementById('prodCTA').value = offer.cta || '';
+            document.getElementById('prodStock').value = offer.stock || '15';
+        }
+
+        function saveOfferPreset() {
+            const offer = getOfferInputs();
+            localStorage.setItem('liveSellingStudioOfferPreset', JSON.stringify(offer));
+            const feedback = document.getElementById('copyPinnedFeedback');
+            feedback.innerText = 'Offer Preset Saved!';
+            feedback.classList.remove('hidden');
+            clearTimeout(feedback.hideTimer);
+            feedback.hideTimer = setTimeout(() => {
+                feedback.classList.add('hidden');
+                feedback.innerText = 'Copied to Clipboard!';
+            }, 1800);
+        }
+
+        function loadOfferPreset() {
+            const saved = localStorage.getItem('liveSellingStudioOfferPreset');
+            if (!saved) {
+                const feedback = document.getElementById('copyPinnedFeedback');
+                feedback.innerText = 'No Saved Preset Yet';
+                feedback.classList.remove('hidden');
+                clearTimeout(feedback.hideTimer);
+                feedback.hideTimer = setTimeout(() => {
+                    feedback.classList.add('hidden');
+                    feedback.innerText = 'Copied to Clipboard!';
+                }, 1800);
+                return;
+            }
+
+            try {
+                const offer = JSON.parse(saved);
+                setOfferInputs(offer);
+                activeProduct = offer;
+                offerBannerVisible = true;
+                updateOfferVisibilityButton();
+            } catch (err) {
+                console.warn('Saved offer preset was invalid.', err);
+                localStorage.removeItem('liveSellingStudioOfferPreset');
+            }
+        }
+
+        function updateOfferVisibilityButton() {
+            const btn = document.getElementById('btn-toggle-offer');
+            btn.innerText = offerBannerVisible ? '👁️ Hide Banner' : '👁️ Show Banner';
+        }
+
+        function toggleOfferBanner() {
+            offerBannerVisible = !offerBannerVisible;
+            updateOfferVisibilityButton();
         }
 
         function clearProduct() {
@@ -940,6 +1132,8 @@
         async function resetStudioEngine() {
             setViewMode('camera');
             activeProduct = null;
+            offerBannerVisible = true;
+            updateOfferVisibilityButton();
             countdownTimeRemaining = 0;
             buyerAlertTimer = 0;
             recentBuyerName = null;
@@ -1138,8 +1332,10 @@
             el.style.opacity = '1';
             setTimeout(() => el.style.opacity = '0', 2500);
 
-            const utterance = new SpeechSynthesisUtterance(speechText);
-            window.speechSynthesis.speak(utterance);
+            if (!muteVoiceAnnouncements.checked && speechText) {
+                const utterance = new SpeechSynthesisUtterance(speechText);
+                window.speechSynthesis.speak(utterance);
+            }
         }
     </script>
 </body>
