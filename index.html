@@ -709,14 +709,16 @@
             const bannerHeight = 302;
             const topY = 180;
             const radius = 28;
-            const leftX = margin + 44;
-            const rightX = canvas.width - margin - 44;
-            const splitX = margin + bannerWidth * 0.62;
-            const leftMax = splitX - leftX - 34;
-            const rightMax = rightX - splitX;
+            const leftX = margin + 45;
+            const rightX = canvas.width - margin - 45;
+            const splitX = margin + bannerWidth * 0.60;
+            const leftMax = splitX - leftX - 42;
+            const rightMax = rightX - splitX - 26;
             const titleY = topY + 70;
-            const valueY = topY + 130;
-            const offerY = topY + 214;
+            const valueY = topY + 142;
+            const offerY = topY + 232;
+            const rightBlockTop = topY + 86;
+            const rightLineGap = 58;
 
             ctx.save();
             ctx.shadowColor = 'rgba(0, 0, 0, 0.44)';
@@ -742,14 +744,15 @@
 
             ctx.textAlign = 'left';
             ctx.fillStyle = '#ffffff';
-            const titleText = activeProduct.name.toUpperCase();
-            setFittedFont(titleText, '800', 42, 'system-ui', leftMax, 28);
+            const rawTitleText = activeProduct.name.toUpperCase();
+            const titleText = rawTitleText.length > 20 ? `${rawTitleText.slice(0, 20)}...` : rawTitleText;
+            setFittedFont(titleText, '900', 41, 'system-ui', leftMax, 26);
             ctx.fillText(titleText, leftX, titleY);
 
             const originalValue = activeProduct.value || '$297';
             const valueText = `ORIGINAL VALUE ${originalValue}`.toUpperCase();
             ctx.fillStyle = '#a1a1aa';
-            setFittedFont(valueText, '700', 29, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 19);
+            setFittedFont(valueText, '700', 27, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 18);
             ctx.fillText(valueText, leftX, valueY);
 
             const originalMetrics = ctx.measureText(valueText);
@@ -764,13 +767,13 @@
             const badgeText = "TODAY'S LIVE SPECIAL ONLY";
             const badgeWidth = 314;
             const badgeHeight = 48;
-            const priceMax = Math.max(160, leftMax - badgeWidth - 32);
+            const priceMax = Math.max(150, leftMax - badgeWidth - 40);
             ctx.fillStyle = '#34D399';
-            setFittedFont(liveOffer, '900', 64, 'system-ui', priceMax, 38);
+            setFittedFont(liveOffer, '900', 60, 'system-ui', priceMax, 36);
             ctx.fillText(liveOffer, leftX, offerY);
 
             const liveMetrics = ctx.measureText(liveOffer);
-            const badgeX = Math.min(leftX + liveMetrics.width + 28, splitX - badgeWidth - 16);
+            const badgeX = Math.min(leftX + liveMetrics.width + 34, splitX - badgeWidth - 20);
             const badgeY = offerY - 42;
             ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
             ctx.strokeStyle = 'rgba(212, 163, 89, 0.72)';
@@ -788,29 +791,29 @@
             ctx.strokeStyle = 'rgba(212, 163, 89, 0.18)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(splitX, topY + 46);
-            ctx.lineTo(splitX, topY + bannerHeight - 46);
+            ctx.moveTo(splitX, topY + 52);
+            ctx.lineTo(splitX, topY + bannerHeight - 52);
             ctx.stroke();
 
             ctx.textAlign = 'right';
             const ctaText = activeProduct.cta || "COMMENT 'BUY' TO UNLOCK LINK";
             ctx.fillStyle = '#ffffff';
-            setFittedFont(ctaText, '850', 32, 'system-ui', rightMax, 20);
-            ctx.fillText(ctaText, rightX, topY + 100);
+            setFittedFont(ctaText, '850', 29, 'system-ui', rightMax, 19);
+            ctx.fillText(ctaText, rightX, rightBlockTop);
 
             const expireText = 'ENDS WHEN TIMER HITS ZERO';
             ctx.fillStyle = '#FBBF24';
-            setFittedFont(expireText, '800', 23, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 16);
-            ctx.fillText(expireText, rightX, topY + 150);
+            setFittedFont(expireText, '800', 22, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 15);
+            ctx.fillText(expireText, rightX, rightBlockTop + rightLineGap);
 
             const stockText = `⚠ ONLY ${activeProduct.stock} COPIES LEFT`;
             ctx.fillStyle = '#F43F5E';
-            setFittedFont(stockText, '900', 30, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 18);
-            ctx.fillText(stockText, rightX, topY + 206);
+            setFittedFont(stockText, '900', 28, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 18);
+            ctx.fillText(stockText, rightX, rightBlockTop + rightLineGap * 2);
 
             ctx.fillStyle = 'rgba(255, 255, 255, 0.46)';
-            ctx.font = '700 16px ui-monospace, SFMono-Regular, Menlo, monospace';
-            ctx.fillText('SECURE YOUR SPOT BEFORE THE LIVE CLOSES', rightX, topY + 252);
+            setFittedFont('SECURE YOUR SPOT BEFORE THE LIVE CLOSES', '700', 15, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
+            ctx.fillText('SECURE YOUR SPOT BEFORE THE LIVE CLOSES', rightX, rightBlockTop + rightLineGap * 3);
         }
 
         function renderLiveTimer() {
