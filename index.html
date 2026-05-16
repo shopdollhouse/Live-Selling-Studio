@@ -1,248 +1,600 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Create a vertical 9:16 livestream layout with slides and a webcam overlay." />
-    <title>Live Layout Studio</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script type="importmap">
-      {
-        "imports": {
-          "@snap/camera-kit": "https://esm.sh/@snap/camera-kit@1.9.0"
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Selling Studio - High Conversion Build</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { background-color: #0b0b0c; color: #f4f4f5; font-family: system-ui, sans-serif; }
+        .teleprompter-text { font-family: Georgia, serif; line-height: 1.6; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0b0c; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+    </style>
+</head>
+<body class="w-screen h-screen flex overflow-hidden select-none">
+
+    <div class="flex-1 h-full flex flex-col items-center justify-center bg-[#121214] p-6 border-r border-[#27272a]">
+        <div class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span> 9:16 Live Stream Monitor (Capture via OBS window share)
+        </div>
+
+        <div class="relative shadow-2xl border border-zinc-800 rounded-2xl overflow-hidden bg-black flex" style="height: 82vh; aspect-ratio: 9/16;">
+            <canvas id="liveCanvas" width="1080" height="1920" class="w-full h-full object-contain"></canvas>
+
+            <div id="canvasAlert" class="absolute top-24 left-1/2 transform -translate-x-1/2 bg-black/90 border border-zinc-700 px-6 py-3 rounded-full text-sm font-bold text-white tracking-wide opacity-0 transition-opacity duration-300 pointer-events-none whitespace-nowrap shadow-xl">
+                Alert Notification
+            </div>
+        </div>
+    </div>
+
+    <div class="w-[440px] h-full bg-[#0b0b0c] flex flex-col justify-between border-l border-zinc-900">
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-5">
+            <div>
+                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">Live Layout Studio</h1>
+                <p class="text-xs text-zinc-500">Premium Live E-Commerce Engine</p>
+            </div>
+
+            <hr class="border-zinc-900" />
+
+            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+                <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Main View Target</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="setViewMode('presentation')" id="btn-mode-pres" class="py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-100 text-zinc-900 transition">Presentation Mode</button>
+                    <button onclick="setViewMode('camera')" id="btn-mode-cam" class="py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition">Full Camera Mode</button>
+                </div>
+            </div>
+
+            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-2">
+                <label class="block text-[11px] uppercase font-bold text-amber-400 tracking-wider">Snapchat Filter Camera Source</label>
+                <select id="cameraSourceSelect" onchange="changeCameraSource(this.value)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                    <option value="">Detecting camera sources...</option>
+                </select>
+                <button onclick="loadCameraDevices()" class="w-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Refresh Camera List</button>
+                <p class="text-[10px] text-zinc-500 leading-normal">Open Snapchat/Snap Camera/OBS Virtual Camera first, then select that virtual camera here to render filtered video into the live canvas.</p>
+            </div>
+
+            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <label class="text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Master Teleprompter</label>
+                    <div class="flex gap-2">
+                        <button onclick="switchPrompterMode('master')" id="btn-prompter-master" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-900 transition">Paste Script</button>
+                        <button onclick="switchPrompterMode('slides')" id="btn-prompter-slides" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition">Slide Sync</button>
+                    </div>
+                </div>
+
+                <div class="bg-black border border-zinc-900 p-4 rounded-xl space-y-2">
+                    <div id="teleprompterDisplay" class="teleprompter-text text-base font-medium text-amber-100/90 h-[160px] overflow-y-auto text-center flex flex-col items-center justify-start p-1 scroll-smooth">
+                        Paste your master script or upload slides to begin tracking hooks.
+                    </div>
+                </div>
+
+                <div id="prompterContainerMaster" class="space-y-2">
+                    <textarea id="masterScriptInput" oninput="updateMasterScript(this.value)" placeholder="Paste your massive, long-form live selling script here..." class="w-full h-32 bg-[#1c1c1e] text-xs p-2.5 border border-zinc-800 rounded-md text-zinc-300 focus:outline-none focus:border-zinc-700 custom-scroll" style="resize: none;"></textarea>
+                    <div class="flex gap-2">
+                        <button onclick="scrollPrompter('up')" class="flex-1 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Scroll Up &#9650;</button>
+                        <button onclick="scrollPrompter('down')" class="flex-1 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Scroll Down &#9660;</button>
+                    </div>
+                </div>
+
+                <div id="prompterContainerSlides" class="space-y-3 hidden">
+                    <div class="flex justify-between items-center text-xs text-zinc-500">
+                        <span>Slide-linked Automation</span>
+                        <span id="slideCounter" class="font-medium">0 / 0</span>
+                    </div>
+                    <button onclick="document.getElementById('slideUpload').click()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 py-2 px-3 rounded-lg text-xs font-semibold transition">Batch Upload Slides</button>
+                    <input type="file" id="slideUpload" multiple accept="image/*" class="hidden" onchange="handleSlideUpload(event)">
+
+                    <div id="slideList" class="max-h-36 overflow-y-auto space-y-2 pr-1 hidden"></div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="prevSlide()" class="bg-zinc-800 hover:bg-zinc-700 py-2 rounded-lg text-xs font-semibold transition">&#9664; Previous</button>
+                        <button onclick="nextSlide()" class="bg-zinc-800 hover:bg-zinc-700 py-2 rounded-lg text-xs font-semibold transition">Next Slide &#9654;</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+                <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Conversion & Offer Details</label>
+                <div class="space-y-2">
+                    <input type="text" id="prodName" placeholder="Product Name (e.g., The Dollhouse Brand Kit)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="prodPrice" placeholder="Offer Price (e.g., $47 today only)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                        <input type="text" id="prodCTA" placeholder="CTA (e.g., COMMENT 'GOLD')" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-zinc-500 mb-1">Scarcity Stock Level</label>
+                        <input type="number" id="prodStock" value="15" min="0" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="dropStock()" class="w-full bg-rose-950/40 hover:bg-rose-950/80 border border-rose-900/40 text-rose-400 py-1.5 rounded-lg text-xs font-bold transition">🔥 Decrease Stock (-1)</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="pinProduct()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-xs font-bold transition">Pin To Live Stream</button>
+                    <button onclick="clearProduct()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 py-2 rounded-lg text-xs font-semibold transition">Clear Banner</button>
+                </div>
+
+                <div class="pt-2 border-t border-zinc-900 space-y-2">
+                    <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Urgency Countdown Timer (Minutes)</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="timerDuration" value="5" min="1" max="60" class="w-20 bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-center text-zinc-200 focus:outline-none">
+                        <button onclick="startCountdown()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold py-1.5 rounded-lg border border-zinc-700 transition">Start Timer</button>
+                        <button onclick="stopCountdown()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold px-3 py-1.5 rounded-lg border border-zinc-800 transition">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+                <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Webcam Frame Overlay Configuration</label>
+                <div>
+                    <select id="cameraShape" onchange="updateCameraShape(this.value)" class="w-full bg-[#1c1c1e] border border-zinc-850 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-zinc-700">
+                        <option value="square">Standard Square Layout</option>
+                        <option value="rounded">Rounded Geometric Rectangle</option>
+                        <option value="circle">Sleek Circular Mask</option>
+                        <option value="heart">Interactive Heart Outline</option>
+                    </select>
+                </div>
+
+                <div id="overlaySliders" class="space-y-2.5 pt-1">
+                    <div class="flex justify-between text-[11px] text-zinc-400"><span>Overlay Scale Matrix</span><span id="val-size">420px</span></div>
+                    <input type="range" min="200" max="800" value="420" oninput="updateOverlay('size', this.value)" class="w-full accent-zinc-400">
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex justify-between text-[11px] text-zinc-400"><span>Position X</span><span id="val-x">540</span></div>
+                            <input type="range" min="0" max="1080" value="540" oninput="updateOverlay('x', this.value)" class="w-full accent-zinc-400">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[11px] text-zinc-400"><span>Position Y</span><span id="val-y">1440</span></div>
+                            <input type="range" min="0" max="1920" value="1440" oninput="updateOverlay('y', this.value)" class="w-full accent-zinc-400">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+                <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Stream Interaction Test Suite</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="triggerAlert('follow', 'Mandy')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Follow</button>
+                    <button onclick="triggerAlert('like', 'Designer')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Like</button>
+                    <button onclick="triggerAlert('gift', 'VIP Customer', 'Rose Gold Chain')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Gift Injection</button>
+                    <button onclick="triggerAlert('sold', 'Buyer #' + Math.floor(Math.random()*900 + 100))" class="bg-emerald-950/40 hover:bg-emerald-950/80 border border-emerald-900/50 text-emerald-400 text-xs font-bold py-2 rounded-lg transition">Test Sold Alert</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="p-4 bg-black border-t border-zinc-900 text-center text-[10px] text-zinc-600 font-mono tracking-wider uppercase">
+            Powered by The Dollhouse Brand Studio
+        </div>
+    </div>
+
+    <video id="rawWebcam" autoplay playsinline style="display:none;"></video>
+
+    <script>
+        const canvas = document.getElementById('liveCanvas');
+        const ctx = canvas.getContext('2d');
+        const video = document.getElementById('rawWebcam');
+        const cameraSelect = document.getElementById('cameraSourceSelect');
+
+        let viewMode = 'presentation';
+        let currentShape = 'square';
+        let overlayConfig = { size: 420, x: 540, y: 1440 };
+        let prompterMode = 'master';
+        let currentStream = null;
+
+        let uploadedSlides = [];
+        let activeSlideIndex = 0;
+        let slideImageObj = new Image();
+
+        let activeProduct = null;
+        let countdownTimeRemaining = 0;
+        let countdownTimerInterval = null;
+        let recentBuyerName = null;
+        let buyerAlertTimer = 0;
+
+        const soundMap = {
+            follow: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav'),
+            like: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav'),
+            gift: new Audio('https://assets.mixkit.co/active_storage/sfx/911/911-84.wav'),
+            sold: new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-84.wav')
+        };
+
+        async function startCamera(deviceId = '') {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({
+                    video: deviceId
+                        ? { deviceId: { exact: deviceId }, width: 1280, height: 720 }
+                        : { width: 1280, height: 720 },
+                    audio: false
+                });
+                video.srcObject = currentStream;
+                await video.play();
+            } catch (err) {
+                console.warn("Camera streaming fallback link.", err);
+            }
         }
-      }
+
+        async function loadCameraDevices() {
+            if (!navigator.mediaDevices?.getUserMedia || !navigator.mediaDevices?.enumerateDevices) {
+                cameraSelect.innerHTML = '<option value="">Camera API unavailable</option>';
+                return;
+            }
+
+            await startCamera(cameraSelect.value);
+
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cameras = devices.filter(device => device.kind === 'videoinput');
+            const activeDeviceId = currentStream?.getVideoTracks()[0]?.getSettings().deviceId || cameraSelect.value;
+
+            cameraSelect.innerHTML = '';
+            if (!cameras.length) {
+                cameraSelect.innerHTML = '<option value="">No cameras detected</option>';
+                return;
+            }
+
+            cameras.forEach((camera, index) => {
+                const option = document.createElement('option');
+                option.value = camera.deviceId;
+                option.textContent = camera.label || `Camera ${index + 1}`;
+                cameraSelect.appendChild(option);
+            });
+
+            if (activeDeviceId) {
+                cameraSelect.value = activeDeviceId;
+            }
+        }
+
+        function changeCameraSource(deviceId) {
+            startCamera(deviceId);
+        }
+
+        loadCameraDevices();
+        requestAnimationFrame(renderLoop);
+
+        function renderLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (viewMode === 'presentation') {
+                if (uploadedSlides.length > 0 && slideImageObj.src) {
+                    ctx.drawImage(slideImageObj, 0, 0, canvas.width, canvas.height);
+                } else {
+                    ctx.fillStyle = '#111113';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#3f3f46';
+                    ctx.font = 'bold 32px system-ui';
+                    ctx.textAlign = 'center';
+                    ctx.fillText("READY TO LIVE LAUNCH", canvas.width / 2, canvas.height / 2 - 20);
+                    ctx.font = '22px system-ui';
+                    ctx.fillStyle = '#27272a';
+                    ctx.fillText("Upload your product pitch deck slides", canvas.width / 2, canvas.height / 2 + 25);
+                }
+
+                ctx.save();
+                applyClippingMask(ctx, overlayConfig.x, overlayConfig.y, overlayConfig.size);
+                try {
+                    ctx.drawImage(video, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size);
+                } catch(e) {}
+                ctx.restore();
+            } else {
+                try {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                } catch(e) {
+                    ctx.fillStyle = '#0b0b0c';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            if (activeProduct) {
+                renderProductBanner();
+            }
+
+            if (countdownTimeRemaining > 0) {
+                renderLiveTimer();
+            }
+
+            if (buyerAlertTimer > 0) {
+                renderSoldSocialProofCard();
+                buyerAlertTimer--;
+            }
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        function applyClippingMask(context, x, y, size) {
+            context.beginPath();
+            if (currentShape === 'circle') {
+                context.arc(x, y, size / 2, 0, Math.PI * 2);
+            } else if (currentShape === 'rounded') {
+                context.roundRect(x - size/2, y - size/2, size, size, 40);
+            } else if (currentShape === 'heart') {
+                let top = y - size/2, left = x - size/2;
+                context.moveTo(x, top + size * 0.3);
+                context.bezierCurveTo(x - size * 0.35, top, left, top + size * 0.45, x, top + size);
+                context.bezierCurveTo(x + size, top + size * 0.45, x + size * 0.35, top, x, top + size * 0.3);
+            } else {
+                context.rect(x - size / 2, y - size / 2, size, size);
+            }
+            context.clip();
+        }
+
+        function renderProductBanner() {
+            const margin = 50;
+            const bannerWidth = canvas.width - (margin * 2);
+            const bannerHeight = 220;
+            const topY = 80;
+
+            ctx.fillStyle = 'rgba(10, 10, 12, 0.96)';
+            ctx.strokeStyle = 'rgba(212, 163, 89, 0.4)';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.roundRect(margin, topY, bannerWidth, bannerHeight, 28);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 44px system-ui';
+            ctx.fillText(activeProduct.name.toUpperCase(), margin + 45, topY + 75);
+
+            ctx.fillStyle = '#34d399';
+            ctx.font = 'bold 48px system-ui';
+            ctx.fillText(activeProduct.price, margin + 45, topY + 150);
+
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px system-ui';
+            ctx.fillText(activeProduct.cta || "COMMENT 'BUY' TO UNLOCK LINK", canvas.width - margin - 45, topY + 95);
+
+            ctx.fillStyle = '#f43f5e';
+            ctx.font = 'bold 28px monospace';
+            ctx.fillText(`⚠️ ONLY ${activeProduct.stock} COPIES LEFT`, canvas.width - margin - 45, topY + 155);
+        }
+
+        function renderLiveTimer() {
+            const minutes = Math.floor(countdownTimeRemaining / 60);
+            const seconds = countdownTimeRemaining % 60;
+            const timerStr = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(244, 63, 94, 0.95)';
+            ctx.beginPath();
+            ctx.roundRect(canvas.width - 250, 320, 200, 75, 18);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 38px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(timerStr, canvas.width - 150, 372);
+            ctx.restore();
+        }
+
+        function renderSoldSocialProofCard() {
+            const margin = 50;
+            const cardY = 420;
+            const cardW = canvas.width - (margin * 2);
+            const cardH = 110;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.95)';
+            ctx.beginPath();
+            ctx.roundRect(margin, cardY, cardW, cardH, 20);
+            ctx.fill();
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px system-ui';
+            ctx.fillText(`🎉 CONFIRMED ORDER: ${recentBuyerName} just claimed theirs!`, canvas.width / 2, cardY + 66);
+            ctx.restore();
+        }
+
+        function switchPrompterMode(mode) {
+            prompterMode = mode;
+            const masterBtn = document.getElementById('btn-prompter-master');
+            const slidesBtn = document.getElementById('btn-prompter-slides');
+            const masterPanel = document.getElementById('prompterContainerMaster');
+            const slidesPanel = document.getElementById('prompterContainerSlides');
+
+            if (mode === 'master') {
+                masterBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-900 transition";
+                slidesBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition";
+                masterPanel.classList.remove('hidden');
+                slidesPanel.classList.add('hidden');
+                updateMasterScript(document.getElementById('masterScriptInput').value);
+            } else {
+                slidesBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-900 transition";
+                masterBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition";
+                slidesPanel.classList.remove('hidden');
+                masterPanel.classList.add('hidden');
+                updateTeleprompter();
+            }
+        }
+
+        function updateMasterScript(text) {
+            if (prompterMode !== 'master') return;
+            const display = document.getElementById('teleprompterDisplay');
+            display.innerText = text || "Your long-form conversion script will display beautifully here.";
+        }
+
+        function scrollPrompter(direction) {
+            const display = document.getElementById('teleprompterDisplay');
+            display.scrollTop += (direction === 'up' ? -40 : 40);
+        }
+
+        function pinProduct() {
+            const name = document.getElementById('prodName').value;
+            const price = document.getElementById('prodPrice').value;
+            const cta = document.getElementById('prodCTA').value;
+            const stock = document.getElementById('prodStock').value || '10';
+
+            if(!name) return alert("Please enter a digital product name to showcase!");
+            activeProduct = { name, price, cta, stock };
+        }
+
+        function clearProduct() {
+            activeProduct = null;
+        }
+
+        function dropStock() {
+            let currentStockInput = document.getElementById('prodStock');
+            let currentVal = parseInt(currentStockInput.value) || 0;
+            if(currentVal > 0) {
+                currentStockInput.value = currentVal - 1;
+                if(activeProduct) {
+                    activeProduct.stock = currentVal - 1;
+                    triggerAlert('sold', 'Buyer #' + Math.floor(Math.random()*800 + 100));
+                }
+            }
+        }
+
+        function startCountdown() {
+            clearInterval(countdownTimerInterval);
+            const mins = parseInt(document.getElementById('timerDuration').value) || 5;
+            countdownTimeRemaining = mins * 60;
+
+            countdownTimerInterval = setInterval(() => {
+                if(countdownTimeRemaining > 0) {
+                    countdownTimeRemaining--;
+                } else {
+                    clearInterval(countdownTimerInterval);
+                }
+            }, 1000);
+        }
+
+        function stopCountdown() {
+            clearInterval(countdownTimerInterval);
+            countdownTimeRemaining = 0;
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('btn-mode-pres').className = mode === 'presentation' ? 'py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-100 text-zinc-900 transition' : 'py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition';
+            document.getElementById('btn-mode-cam').className = mode === 'camera' ? 'py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-100 text-zinc-900 transition' : 'py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition';
+            document.getElementById('overlaySliders').style.display = mode === 'presentation' ? 'block' : 'none';
+        }
+
+        function updateCameraShape(shape) { currentShape = shape; }
+
+        function updateOverlay(prop, val) {
+            overlayConfig[prop] = parseInt(val);
+            document.getElementById(`val-${prop}`).innerText = val + (prop === 'size' ? 'px' : '');
+        }
+
+        function handleSlideUpload(event) {
+            const files = Array.from(event.target.files);
+            files.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedSlides.push({
+                        src: e.target.result,
+                        script: `Slide outline #${uploadedSlides.length + 1} pitch track.`
+                    });
+                    if (uploadedSlides.length === 1) selectSlide(0);
+                    renderSlideManager();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderSlideManager() {
+            const container = document.getElementById('slideList');
+            container.innerHTML = '';
+            container.classList.remove('hidden');
+
+            document.getElementById('slideCounter').innerText = `${activeSlideIndex + 1} / ${uploadedSlides.length}`;
+
+            uploadedSlides.forEach((slide, i) => {
+                container.innerHTML += `
+                    <div class="flex flex-col gap-1.5 p-2.5 border bg-black rounded-xl ${i === activeSlideIndex ? 'border-zinc-500' : 'border-zinc-800'}">
+                        <div class="flex items-center justify-between text-[11px] font-bold text-zinc-400">
+                            <span>DECK POSITION ${i + 1}</span>
+                            <button onclick="selectSlide(${i})" class="text-[10px] text-emerald-400 uppercase tracking-wider font-extrabold">Active View</button>
+                        </div>
+                        <textarea oninput="uploadedSlides[${i}].script = this.value; if(activeSlideIndex===${i}) updateTeleprompter();" class="w-full bg-[#1c1c1e] text-xs p-2 border border-zinc-800 rounded-md text-zinc-300 focus:outline-none focus:border-zinc-700" rows="2">${slide.script}</textarea>
+                    </div>`;
+            });
+            updateTeleprompter();
+        }
+
+        function selectSlide(index) {
+            if(index >= 0 && index < uploadedSlides.length) {
+                activeSlideIndex = index;
+                slideImageObj.src = uploadedSlides[index].src;
+                renderSlideManager();
+            }
+        }
+
+        function nextSlide() {
+            if(prompterMode === 'master') {
+                scrollPrompter('down');
+            } else if(activeSlideIndex < uploadedSlides.length - 1) {
+                selectSlide(activeSlideIndex + 1);
+            }
+        }
+
+        function prevSlide() {
+            if(prompterMode === 'master') {
+                scrollPrompter('up');
+            } else if(activeSlideIndex > 0) {
+                selectSlide(activeSlideIndex - 1);
+            }
+        }
+
+        function updateTeleprompter() {
+            if(prompterMode !== 'slides') return;
+            if(uploadedSlides.length > 0) {
+                document.getElementById('teleprompterDisplay').innerText = uploadedSlides[activeSlideIndex].script;
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') return;
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        function triggerAlert(type, user, giftName = '') {
+            if(soundMap[type]) soundMap[type].play().catch(()=>{});
+
+            let overlayText = '';
+            let speechText = '';
+
+            if(type === 'follow') {
+                overlayText = `NEW FOLLOWER: @${user}`;
+                speechText = `${user} thanks for the follow!`;
+            } else if(type === 'like') {
+                overlayText = `@${user} LIKED THE STREAM`;
+                speechText = `${user} liked the stream, thank you!`;
+            } else if(type === 'gift') {
+                overlayText = `Gifting Tier: @${user} sent ${giftName}!`;
+                speechText = `Wow! ${user} sent a ${giftName}!`;
+            } else if(type === 'sold') {
+                overlayText = `🔥 CONGRATS: ${user} LOCKED IN AN ORDER!`;
+                speechText = `Congratulations to ${user} on their confirmed order!`;
+                recentBuyerName = user;
+                buyerAlertTimer = 180;
+            }
+
+            const el = document.getElementById('canvasAlert');
+            el.innerText = overlayText;
+            el.style.opacity = '1';
+            setTimeout(() => el.style.opacity = '0', 2500);
+
+            const utterance = new SpeechSynthesisUtterance(speechText);
+            window.speechSynthesis.speak(utterance);
+        }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
-    <script src="app.js" type="module"></script>
-  </head>
-  <body>
-    <main class="app-shell">
-      <section class="stage-panel" aria-label="Broadcast preview">
-        <div class="monitor-bar">
-          <div>
-            <p class="eyebrow">Broadcast Canvas</p>
-            <h1>Live Layout Studio</h1>
-          </div>
-          <div class="status-pill" id="renderStatus">9:16 · Ready</div>
-        </div>
-
-        <div class="canvas-frame">
-          <canvas id="broadcastCanvas" width="1080" height="1920" aria-label="Vertical live stream canvas preview"></canvas>
-        </div>
-      </section>
-
-      <aside class="control-panel" aria-label="Stream layout controls">
-        <section class="panel-section scene-panel">
-          <div class="section-heading">
-            <h2>Main View</h2>
-            <span id="sceneStatus">Presentation</span>
-          </div>
-
-          <div class="segmented-control" role="group" aria-label="Main view switcher">
-            <button id="presentationMode" type="button" class="is-active">Presentation Mode</button>
-            <button id="fullCameraMode" type="button">Full Camera Mode</button>
-          </div>
-        </section>
-
-        <section class="panel-section">
-          <div class="section-heading">
-            <h2>Slides</h2>
-            <span id="slideCount">0 / 0</span>
-          </div>
-
-          <label class="file-button">
-            <input id="slideUpload" type="file" accept="image/png,image/jpeg,application/pdf" multiple />
-            Upload Slides
-          </label>
-
-          <div class="button-row">
-            <button id="prevSlide" type="button" class="secondary-button">Previous</button>
-            <button id="nextSlide" type="button" class="primary-button">Next Slide</button>
-          </div>
-
-          <label class="file-button script-file-button">
-            <input id="scriptUpload" type="file" accept="text/plain,.txt" />
-            Load Script File
-          </label>
-        </section>
-
-        <section class="panel-section teleprompter-panel">
-          <div class="section-heading">
-            <h2>Live Teleprompter</h2>
-            <span id="teleprompterSlideLabel">No slide</span>
-          </div>
-
-          <div class="teleprompter-display" id="teleprompterText" aria-live="polite">
-            Upload slides, then add script text for each slide.
-          </div>
-        </section>
-
-        <section class="panel-section">
-          <div class="section-heading">
-            <h2>Slide Scripts</h2>
-            <span id="scriptEditorStatus">0 slides</span>
-          </div>
-
-          <div class="slide-script-list" id="slideScriptList"></div>
-        </section>
-
-        <section class="panel-section">
-          <div class="section-heading">
-            <h2>TikTok Live</h2>
-            <span id="tiktokStatus">Disconnected</span>
-          </div>
-
-          <label class="field-label" for="tiktokUsername">TikTok Username</label>
-          <input id="tiktokUsername" class="text-input" type="text" autocomplete="off" placeholder="@creator" />
-
-          <div class="button-row">
-            <button id="connectTikTok" type="button" class="primary-button">Connect to Live</button>
-            <button id="disconnectTikTok" type="button" class="secondary-button">Disconnect</button>
-          </div>
-
-          <div class="button-row compact-buttons">
-            <button id="testLikeAlert" type="button" class="ghost-button">Test Like</button>
-            <button id="testFollowAlert" type="button" class="ghost-button">Test Follow</button>
-            <button id="testGiftAlert" type="button" class="ghost-button">Test Gift</button>
-            <button id="testSoldAlert" type="button" class="ghost-button">Test Sold</button>
-          </div>
-        </section>
-
-        <section class="panel-section">
-          <div class="section-heading">
-            <h2>Product Showcase Management</h2>
-            <span id="productStatus">No product</span>
-          </div>
-
-          <label class="field-label" for="productName">Product Name</label>
-          <input id="productName" class="text-input" type="text" placeholder="Silk Glow Serum" />
-
-          <label class="field-label stacked" for="productPrice">Price</label>
-          <input id="productPrice" class="text-input" type="text" placeholder="$39 today" />
-
-          <label class="field-label stacked" for="productCta">Call-to-Action</label>
-          <input id="productCta" class="text-input" type="text" placeholder="Tap the link below to buy!" />
-
-          <div class="button-row">
-            <button id="pinProduct" type="button" class="primary-button">Pin Product</button>
-            <button id="clearProduct" type="button" class="secondary-button">Clear</button>
-          </div>
-
-          <label class="field-label stacked" for="countdownMinutes">Flash-Sale Timer</label>
-          <input id="countdownMinutes" class="text-input" type="number" min="0.25" step="0.25" value="5" />
-
-          <div class="button-row compact-buttons">
-            <button id="startCountdown" type="button" class="ghost-button">Start Timer</button>
-            <button id="stopCountdown" type="button" class="ghost-button">Pause</button>
-            <button id="resetCountdown" type="button" class="ghost-button">Reset</button>
-          </div>
-        </section>
-
-        <section class="panel-section">
-          <div class="section-heading">
-            <h2>Camera</h2>
-            <span id="cameraStatus">Idle</span>
-          </div>
-
-          <label class="field-label" for="cameraSelect">Webcam Source</label>
-          <select id="cameraSelect">
-            <option value="">Request camera access</option>
-          </select>
-
-          <button id="refreshCameras" type="button" class="secondary-button full-width">Refresh Cameras</button>
-        </section>
-
-        <section class="panel-section">
-          <div class="section-heading">
-            <h2>Camera Shape</h2>
-            <span id="cameraShapeStatus">Square</span>
-          </div>
-
-          <label class="field-label" for="cameraShape">Overlay Shape</label>
-          <select id="cameraShape">
-            <option value="square" selected>Square</option>
-            <option value="rounded">Rounded Rectangle</option>
-            <option value="circle">Circle</option>
-            <option value="heart">Heart</option>
-          </select>
-        </section>
-
-        <section class="panel-section">
-          <div class="section-heading">
-            <h2>Snapchat Lenses</h2>
-            <span id="snapStatus">Not configured</span>
-          </div>
-
-          <label class="field-label" for="snapApiToken">API Token</label>
-          <input
-            id="snapApiToken"
-            class="text-input"
-            type="password"
-            autocomplete="off"
-            placeholder="YOUR_SNAP_CAMERA_KIT_API_TOKEN"
-          />
-
-          <label class="field-label stacked" for="lensGroupId">Lens Group ID</label>
-          <input id="lensGroupId" class="text-input" type="text" placeholder="Paste Lens Group ID" />
-
-          <button id="loadLensGroup" type="button" class="secondary-button full-width">Load Lens Group</button>
-
-          <label class="field-label stacked" for="lensSelect">Available Lenses</label>
-          <select id="lensSelect">
-            <option value="">Load a Lens Group first</option>
-          </select>
-
-          <div class="lens-quick-actions" id="lensQuickActions" aria-label="Saved Snapchat lens shortcuts"></div>
-
-          <label class="field-label stacked" for="lensId">Lens ID</label>
-          <input id="lensId" class="text-input" type="text" placeholder="Paste Lens ID" />
-
-          <div class="button-row">
-            <button id="applyLens" type="button" class="primary-button">Apply Lens</button>
-            <button id="removeLens" type="button" class="secondary-button">Remove</button>
-          </div>
-        </section>
-
-        <section class="panel-section" id="overlayControls">
-          <div class="section-heading">
-            <h2>Webcam Overlay</h2>
-            <button id="resetOverlay" type="button" class="ghost-button">Reset</button>
-          </div>
-
-          <label class="range-control" for="overlayX">
-            <span>X Position</span>
-            <output id="overlayXValue">313 px</output>
-          </label>
-          <input id="overlayX" type="range" min="0" max="1080" value="313" />
-
-          <label class="range-control" for="overlayY">
-            <span>Y Position</span>
-            <output id="overlayYValue">1485 px</output>
-          </label>
-          <input id="overlayY" type="range" min="0" max="1920" value="1485" />
-
-          <label class="range-control" for="overlayScale">
-            <span>Size</span>
-            <output id="overlayScaleValue">42%</output>
-          </label>
-          <input id="overlayScale" type="range" min="18" max="80" value="42" />
-        </section>
-
-        <section class="panel-section compact">
-          <div class="shortcut-grid" aria-label="Keyboard shortcuts">
-            <span>←</span>
-            <p>Previous slide</p>
-            <span>→</span>
-            <p>Next slide</p>
-          </div>
-        </section>
-      </aside>
-    </main>
-
-    <canvas id="snapCameraCanvas" width="1280" height="720" aria-hidden="true"></canvas>
-    <audio id="likeAlertAudio" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
-    <audio id="followAlertAudio" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
-    <audio id="giftAlertAudio" preload="auto" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"></audio>
-  </body>
+</body>
 </html>
