@@ -117,7 +117,7 @@
                         <span id="slideCounter" class="font-medium">0 / 0</span>
                     </div>
                     <button onclick="document.getElementById('slideUpload').click()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 py-2 px-3 rounded-lg text-xs font-semibold transition">Batch Upload Slides (.JPG / .PNG)</button>
-                    <input type="file" id="slideUpload" multiple accept="image/*" class="hidden" onchange="handleSlideUpload(event)">
+                    <input type="file" id="slideUpload" multiple accept="image/*" onchange="handleSlideUpload(event)" class="block w-full cursor-pointer rounded-lg border border-zinc-800 bg-[#1c1c1e] text-xs text-zinc-400 file:mr-3 file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-xs file:font-bold file:text-zinc-200 hover:file:bg-zinc-700">
 
                     <div id="slideList" class="max-h-36 overflow-y-auto space-y-2 pr-1 hidden"></div>
 
@@ -247,7 +247,13 @@
         let activeSlideIndex = 0;
         let slideImageObj = new Image();
 
-        let activeProduct = null;
+        let activeProduct = {
+            name: 'YOUR BRAND KIT',
+            value: '$198',
+            price: '$97',
+            cta: 'LINK IN BIO',
+            stock: '15'
+        };
         let countdownTimeRemaining = 0;
         let countdownTimerInterval = null;
         let recentBuyerName = null;
@@ -717,8 +723,9 @@
             const titleY = topY + 70;
             const valueY = topY + 142;
             const offerY = topY + 232;
-            const rightBlockTop = topY + 86;
-            const rightLineGap = 58;
+            const ctaY = topY + 70;
+            const timerLabelY = topY + 130;
+            const stockY = topY + 190;
 
             ctx.save();
             ctx.shadowColor = 'rgba(0, 0, 0, 0.44)';
@@ -798,22 +805,23 @@
             ctx.textAlign = 'right';
             const ctaText = activeProduct.cta || "COMMENT 'BUY' TO UNLOCK LINK";
             ctx.fillStyle = '#ffffff';
-            setFittedFont(ctaText, '850', 29, 'system-ui', rightMax, 19);
-            ctx.fillText(ctaText, rightX, rightBlockTop);
+            const safeCtaText = ctaText.length > 30 ? `${ctaText.slice(0, 30)}...` : ctaText;
+            setFittedFont(safeCtaText, '850', 28, 'system-ui', rightMax, 12);
+            ctx.fillText(safeCtaText, rightX, ctaY);
 
             const expireText = 'ENDS WHEN TIMER HITS ZERO';
             ctx.fillStyle = '#FBBF24';
-            setFittedFont(expireText, '800', 22, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 15);
-            ctx.fillText(expireText, rightX, rightBlockTop + rightLineGap);
+            setFittedFont(expireText, '800', 22, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 14);
+            ctx.fillText(expireText, rightX, timerLabelY);
 
             const stockText = `⚠ ONLY ${activeProduct.stock} COPIES LEFT`;
             ctx.fillStyle = '#F43F5E';
             setFittedFont(stockText, '900', 28, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 18);
-            ctx.fillText(stockText, rightX, rightBlockTop + rightLineGap * 2);
+            ctx.fillText(stockText, rightX, stockY);
 
             ctx.fillStyle = 'rgba(255, 255, 255, 0.46)';
             setFittedFont('SECURE YOUR SPOT BEFORE THE LIVE CLOSES', '700', 15, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
-            ctx.fillText('SECURE YOUR SPOT BEFORE THE LIVE CLOSES', rightX, rightBlockTop + rightLineGap * 3);
+            ctx.fillText('SECURE YOUR SPOT BEFORE THE LIVE CLOSES', rightX, topY + 248);
         }
 
         function renderLiveTimer() {
@@ -866,12 +874,16 @@
                 slidesBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition";
                 masterPanel.classList.remove('hidden');
                 slidesPanel.classList.add('hidden');
+                masterPanel.style.display = 'block';
+                slidesPanel.style.display = 'none';
                 updateMasterScript(document.getElementById('masterScriptInput').value);
             } else {
                 slidesBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-900 transition";
                 masterBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition";
                 slidesPanel.classList.remove('hidden');
                 masterPanel.classList.add('hidden');
+                slidesPanel.style.display = 'block';
+                masterPanel.style.display = 'none';
                 updateTeleprompter();
             }
         }
