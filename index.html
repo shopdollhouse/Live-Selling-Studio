@@ -155,7 +155,7 @@
                     </div>
                 </div>
                 <button onclick="loadCameraDevices()" class="w-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Refresh Camera List</button>
-                <p class="text-[10px] text-zinc-500 leading-normal">Open Snapchat/Snap Camera/OBS Virtual Camera first, then select that virtual camera here to render filtered video into the live canvas.</p>
+                <p class="text-[10px] text-zinc-500 leading-normal">Select Auto Front/Selfie Camera for phone use, or choose your iPhone/Continuity/virtual camera directly after refreshing the list.</p>
             </div>
 
             <div class="tt-panel p-4 space-y-3">
@@ -709,11 +709,14 @@
                 return;
             }
 
-            await startCamera(cameraSelect.value);
+            const requestedDeviceId = cameraSelect.value;
+            await startCamera(requestedDeviceId);
 
             const devices = await navigator.mediaDevices.enumerateDevices();
-            const cameras = devices.filter(device => device.kind === 'videoinput');
-            const activeDeviceId = currentStream?.getVideoTracks()[0]?.getSettings().deviceId || cameraSelect.value;
+            const cameras = devices
+                .filter(device => device.kind === 'videoinput')
+                .sort((a, b) => getCameraPriority(b) - getCameraPriority(a));
+            const activeDeviceId = requestedDeviceId || currentStream?.getVideoTracks()[0]?.getSettings().deviceId || '';
 
             cameraSelect.innerHTML = '';
             if (!cameras.length) {
@@ -721,6 +724,11 @@
                 cameraStatus.innerText = 'No camera sources detected';
                 return;
             }
+
+            const autoOption = document.createElement('option');
+            autoOption.value = '';
+            autoOption.textContent = 'Auto Front / Selfie Camera';
+            cameraSelect.appendChild(autoOption);
 
             cameras.forEach((camera, index) => {
                 const option = document.createElement('option');
@@ -732,6 +740,14 @@
             if (activeDeviceId) {
                 cameraSelect.value = activeDeviceId;
             }
+        }
+
+        function getCameraPriority(camera) {
+            const label = (camera.label || '').toLowerCase();
+            if (label.includes('iphone') || label.includes('continuity') || label.includes('phone')) return 4;
+            if (label.includes('front') || label.includes('facetime') || label.includes('user')) return 3;
+            if (label.includes('snap') || label.includes('obs') || label.includes('virtual')) return 2;
+            return 1;
         }
 
         function changeCameraSource(deviceId) {
