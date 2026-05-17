@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Selling Studio - Dual Layer Build</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script type="module" src="/snap-camera-kit-bridge.js"></script>
     <style>
         :root {
             --tt-bg: #050505;
@@ -649,6 +650,13 @@
             startCamera(deviceId);
         }
 
+        const snapSdkModuleUrls = [
+            'https://esm.sh/@snap/camera-kit@1.14.0?bundle&target=es2020',
+            'https://esm.sh/@snap/camera-kit?bundle',
+            'https://cdn.jsdelivr.net/npm/@snap/camera-kit/+esm',
+            'https://unpkg.com/@snap/camera-kit/dist/index.js'
+        ];
+
         async function fallbackToRawCamera(reason = 'Snap fallback to raw webcam') {
             console.warn(reason);
             snapFiltersEnabled = false;
@@ -670,15 +678,23 @@
 
         async function loadSnapModule() {
             if (snapModule) return snapModule;
+            if (window.SnapCameraKitBridge) {
+                snapModule = window.SnapCameraKitBridge;
+                return snapModule;
+            }
 
-            const moduleUrls = [
-                'https://cdn.jsdelivr.net/npm/@snap/camera-kit/+esm',
-                'https://esm.sh/@snap/camera-kit?bundle',
-                'https://unpkg.com/@snap/camera-kit/dist/index.js'
-            ];
+            try {
+                snapStatus.innerText = 'Waiting for Camera Kit package';
+                await waitForSnapBridge();
+                snapModule = window.SnapCameraKitBridge;
+                return snapModule;
+            } catch (err) {
+                console.warn('Camera Kit npm bridge unavailable, trying CDN fallback.', err);
+            }
+
             let lastError = null;
 
-            for (const moduleUrl of moduleUrls) {
+            for (const moduleUrl of snapSdkModuleUrls) {
                 try {
                     snapStatus.innerText = 'Loading Camera Kit SDK';
                     snapModule = await import(moduleUrl);
@@ -694,6 +710,47 @@
             throw lastError || new Error('Camera Kit SDK failed to load');
         }
 
+        function waitForSnapBridge(timeoutMs = 3000) {
+            if (window.SnapCameraKitBridge) return Promise.resolve();
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    window.removeEventListener('snap-camera-kit-ready', onReady);
+                    reject(new Error('Camera Kit npm bridge did not load'));
+                }, timeoutMs);
+                function onReady() {
+                    clearTimeout(timeout);
+                    resolve();
+                }
+                window.addEventListener('snap-camera-kit-ready', onReady, { once: true });
+            });
+        }
+
+        async function bootstrapSnapCameraKit(apiToken) {
+            let lastError = null;
+            const failures = [];
+
+            for (const moduleUrl of snapSdkModuleUrls) {
+                try {
+                    snapStatus.innerText = 'Bootstrapping Camera Kit';
+                    const kitModule = window.SnapCameraKitBridge || await import(moduleUrl);
+                    if (!kitModule.bootstrapCameraKit) {
+                        throw new Error('bootstrapCameraKit export missing');
+                    }
+                    const cameraKit = await kitModule.bootstrapCameraKit({ apiToken });
+                    snapModule = kitModule;
+                    return cameraKit;
+                } catch (err) {
+                    lastError = err;
+                    failures.push(`${moduleUrl}: ${err?.message || err?.name || 'unknown error'}`);
+                    console.warn(`Camera Kit bootstrap failed from ${moduleUrl}.`, err);
+                    if (window.SnapCameraKitBridge) break;
+                }
+            }
+
+            console.warn('All Camera Kit bootstrap attempts failed.', failures);
+            throw new Error('All Camera Kit SDK bootstrap attempts failed. Use the Staging API Token, allow http://localhost:8080 in Snap, or switch to the official npm/Vite build.');
+        }
+
         async function ensureSnapSession() {
             const apiToken = document.getElementById('snapApiToken').value.trim();
             if (!apiToken) {
@@ -702,7 +759,6 @@
                 throw new Error('Missing Snap Camera Kit API token');
             }
 
-            const kit = await loadSnapModule();
             if (activeSnapApiToken && activeSnapApiToken !== apiToken) {
                 try {
                     if (snapSession) {
@@ -721,8 +777,7 @@
 
             if (!snapCameraKit) {
                 try {
-                    snapStatus.innerText = 'Bootstrapping Camera Kit';
-                    snapCameraKit = await kit.bootstrapCameraKit({ apiToken });
+                    snapCameraKit = await bootstrapSnapCameraKit(apiToken);
                     activeSnapApiToken = apiToken;
                 } catch (err) {
                     snapStatus.innerText = 'Camera Kit bootstrap failed - check Staging token and localhost origin';
@@ -731,10 +786,10 @@
             }
 
             if (!snapSession) {
-                snapOutputCanvas = document.createElement('canvas');
+                snapSession = await snapCameraKit.createSession();
+                snapOutputCanvas = snapSession.output.live;
                 snapOutputCanvas.width = 1280;
                 snapOutputCanvas.height = 720;
-                snapSession = await snapCameraKit.createSession({ liveRenderTarget: snapOutputCanvas });
                 snapSession.events.addEventListener('error', (event) => {
                     console.warn('Camera Kit session error:', event.detail?.error || event);
                     snapStatus.innerText = 'Snap lens error - removed by SDK';
@@ -743,7 +798,7 @@
                 });
             }
 
-            return { kit, session: snapSession };
+            return { kit: snapModule || await loadSnapModule(), session: snapSession };
         }
 
         async function routeStreamThroughSnap() {
@@ -761,11 +816,14 @@
 
             try {
                 const { kit, session } = await ensureSnapSession();
-                const source = kit.createMediaStreamSource(currentStream, {
-                    transform: kit.Transform2D?.MirrorX,
-                    cameraType: 'front'
-                });
+                const source = kit.createMediaStreamSource(currentStream, { cameraType: 'front' });
                 await session.setSource(source);
+                if (source.setTransform && kit.Transform2D?.MirrorX) {
+                    source.setTransform(kit.Transform2D.MirrorX);
+                }
+                if (source.setRenderSize) {
+                    source.setRenderSize(720, 1280);
+                }
                 await session.play('live');
                 snapFiltersEnabled = true;
                 snapFilterToggle.checked = true;
