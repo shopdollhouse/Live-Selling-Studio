@@ -722,7 +722,7 @@
             if (!snapCameraKit) {
                 try {
                     snapStatus.innerText = 'Bootstrapping Camera Kit';
-                    snapCameraKit = await kit.bootstrapCameraKit({ apiToken, logger: 'console' });
+                    snapCameraKit = await kit.bootstrapCameraKit({ apiToken });
                     activeSnapApiToken = apiToken;
                 } catch (err) {
                     snapStatus.innerText = 'Camera Kit bootstrap failed - check Staging token and localhost origin';
