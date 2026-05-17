@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Selling Studio - Dual Layer Build</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script type="module" src="/snap-camera-kit-bridge.js"></script>
+    <script type="module">
+        if (window.location.protocol !== 'file:') {
+            import('./snap-camera-kit-bridge.js');
+        }
+    </script>
     <style>
         :root {
             --tt-bg: #050505;
@@ -511,15 +515,42 @@
                 : 'rounded-full border border-cyan-400/50 bg-cyan-950/20 px-3 py-1 text-cyan-300';
         }
 
+        function safeStorageGet(key) {
+            try {
+                return window.localStorage?.getItem(key) || '';
+            } catch (err) {
+                console.warn('Local storage unavailable for this page mode.', err);
+                return '';
+            }
+        }
+
+        function safeStorageSet(key, value) {
+            try {
+                window.localStorage?.setItem(key, value);
+                return true;
+            } catch (err) {
+                console.warn('Unable to save to local storage in this page mode.', err);
+                return false;
+            }
+        }
+
+        function safeStorageRemove(key) {
+            try {
+                window.localStorage?.removeItem(key);
+            } catch (err) {
+                console.warn('Unable to remove local storage item in this page mode.', err);
+            }
+        }
+
         function saveSnapCredentials() {
-            localStorage.setItem('liveSellingStudioSnapApiToken', document.getElementById('snapApiToken').value.trim());
-            localStorage.setItem('liveSellingStudioSnapLensGroupId', document.getElementById('snapLensGroupId').value.trim());
-            snapStatus.innerText = 'Snap credentials saved locally';
+            const savedToken = safeStorageSet('liveSellingStudioSnapApiToken', document.getElementById('snapApiToken').value.trim());
+            const savedGroup = safeStorageSet('liveSellingStudioSnapLensGroupId', document.getElementById('snapLensGroupId').value.trim());
+            snapStatus.innerText = savedToken && savedGroup ? 'Snap credentials saved locally' : 'Open localhost to save Snap credentials';
         }
 
         function restoreSnapCredentials() {
-            const savedToken = localStorage.getItem('liveSellingStudioSnapApiToken') || '';
-            const savedGroupId = localStorage.getItem('liveSellingStudioSnapLensGroupId') || '';
+            const savedToken = safeStorageGet('liveSellingStudioSnapApiToken');
+            const savedGroupId = safeStorageGet('liveSellingStudioSnapLensGroupId');
             document.getElementById('snapApiToken').value = savedToken;
             document.getElementById('snapLensGroupId').value = savedGroupId;
             if (savedToken || savedGroupId) {
@@ -683,13 +714,16 @@
                 return snapModule;
             }
 
-            try {
-                snapStatus.innerText = 'Waiting for Camera Kit package';
-                await waitForSnapBridge();
-                snapModule = window.SnapCameraKitBridge;
-                return snapModule;
-            } catch (err) {
-                console.warn('Camera Kit npm bridge unavailable, trying CDN fallback.', err);
+            if (getEnvironmentLabel() !== 'FILE ERROR') {
+                try {
+                    snapStatus.innerText = 'Waiting for Camera Kit package';
+                    await import('./snap-camera-kit-bridge.js');
+                    await waitForSnapBridge();
+                    snapModule = window.SnapCameraKitBridge;
+                    return snapModule;
+                } catch (err) {
+                    console.warn('Camera Kit npm bridge unavailable, trying CDN fallback.', err);
+                }
             }
 
             let lastError = null;
@@ -1550,9 +1584,9 @@
 
         function saveOfferPreset() {
             const offer = getOfferInputs();
-            localStorage.setItem('liveSellingStudioOfferPreset', JSON.stringify(offer));
+            const didSave = safeStorageSet('liveSellingStudioOfferPreset', JSON.stringify(offer));
             const feedback = document.getElementById('copyPinnedFeedback');
-            feedback.innerText = 'Offer Preset Saved!';
+            feedback.innerText = didSave ? 'Offer Preset Saved!' : 'Open Localhost To Save Preset';
             feedback.classList.remove('hidden');
             clearTimeout(feedback.hideTimer);
             feedback.hideTimer = setTimeout(() => {
@@ -1562,7 +1596,7 @@
         }
 
         function loadOfferPreset() {
-            const saved = localStorage.getItem('liveSellingStudioOfferPreset');
+            const saved = safeStorageGet('liveSellingStudioOfferPreset');
             if (!saved) {
                 const feedback = document.getElementById('copyPinnedFeedback');
                 feedback.innerText = 'No Saved Preset Yet';
@@ -1583,7 +1617,7 @@
                 updateOfferVisibilityButton();
             } catch (err) {
                 console.warn('Saved offer preset was invalid.', err);
-                localStorage.removeItem('liveSellingStudioOfferPreset');
+                safeStorageRemove('liveSellingStudioOfferPreset');
             }
         }
 
