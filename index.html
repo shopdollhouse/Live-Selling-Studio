@@ -21,37 +21,76 @@
     </script>
     <style>
         :root {
-            --tt-bg: #050505;
-            --tt-panel: #111113;
-            --tt-panel-soft: #18181b;
-            --tt-border: rgba(255, 255, 255, 0.09);
-            --tt-text: #f8fafc;
-            --tt-muted: #a1a1aa;
-            --tt-cyan: #25f4ee;
-            --tt-red: #fe2c55;
-            --tt-pink: #ff3b8a;
+            --tt-bg: #ecebf8;
+            --tt-panel: rgba(255, 255, 255, 0.52);
+            --tt-panel-soft: rgba(255, 255, 255, 0.34);
+            --tt-border: rgba(255, 255, 255, 0.74);
+            --tt-text: #4b5568;
+            --tt-muted: #8490a6;
+            --tt-cyan: #7c91d8;
+            --tt-red: #d86c8a;
+            --tt-pink: #bd8adf;
+            --studio-shadow: 0 24px 70px rgba(97, 112, 164, 0.20);
         }
         body {
-            background-color: var(--tt-bg);
+            background:
+                radial-gradient(circle at 14% 9%, rgba(124, 145, 216, 0.14), transparent 26%),
+                radial-gradient(circle at 78% 14%, rgba(189, 138, 223, 0.12), transparent 25%),
+                linear-gradient(135deg, #f4eef7 0%, #e9ebf8 48%, #eef1fb 100%);
             color: var(--tt-text);
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(circle, rgba(124, 145, 216, 0.13) 0 2px, transparent 2px),
+                radial-gradient(circle, rgba(189, 138, 223, 0.10) 0 1.5px, transparent 1.5px);
+            background-position: 12vw 9vh, 82vw 56vh;
+            background-size: 420px 420px, 360px 360px;
+            opacity: 0.9;
+        }
         .teleprompter-text {
             font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-            font-size: 1.08rem;
-            line-height: 1.78;
+            font-size: 1.12rem;
+            line-height: 1.85;
             max-width: 280px;
             margin: 0 auto;
             padding-top: 0;
             text-align: center;
             align-items: flex-start;
             justify-content: flex-start;
+            color: #4f5b72 !important;
+            font-weight: 700;
+            text-shadow: none;
+        }
+        .script-surface {
+            background: rgba(255, 255, 255, 0.66) !important;
+            border: 1px solid rgba(255, 255, 255, 0.9) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68), 0 12px 34px rgba(97, 112, 164, 0.08);
+        }
+        .script-input {
+            background: rgba(255, 255, 255, 0.74) !important;
+            border: 1px solid rgba(255, 255, 255, 0.92) !important;
+            border-radius: 16px;
+            color: #4f5b72 !important;
+            font-size: 13px;
+            line-height: 1.6;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64), 0 10px 28px rgba(97, 112, 164, 0.07);
+        }
+        .script-input::placeholder {
+            color: rgba(79, 91, 114, 0.62) !important;
         }
         .tt-panel {
-            background: linear-gradient(180deg, rgba(20, 20, 23, 0.96), rgba(8, 8, 10, 0.98));
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.34));
             border: 1px solid var(--tt-border);
-            border-radius: 12px;
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+            border-radius: 26px;
+            box-shadow: var(--studio-shadow);
+            color: var(--tt-text);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
         }
         .tt-label {
             color: var(--tt-cyan);
@@ -62,34 +101,47 @@
         }
         .tt-input {
             width: 100%;
-            background: #0c0c0e;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.56);
+            border: 1px solid rgba(255, 255, 255, 0.84);
+            border-radius: 18px;
             padding: 0.6rem 0.75rem;
-            color: #f4f4f5;
+            color: #4b5568;
             font-size: 12px;
             outline: none;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54), 0 10px 28px rgba(97, 112, 164, 0.08);
         }
-        .tt-input:focus { border-color: rgba(37, 244, 238, 0.72); }
+        .tt-input::placeholder { color: rgba(92, 103, 124, 0.58); }
+        .tt-input:focus {
+            border-color: rgba(124, 145, 216, 0.88);
+            box-shadow: 0 0 0 4px rgba(124, 145, 216, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.64);
+        }
         .tt-button {
             border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: #16161a;
-            color: #f4f4f5;
+            border: 1px solid rgba(255, 255, 255, 0.78);
+            background: rgba(255, 255, 255, 0.45);
+            color: #536078;
             font-size: 12px;
             font-weight: 800;
             transition: 160ms ease;
+            box-shadow: 0 12px 26px rgba(97, 112, 164, 0.11);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
-        .tt-button:hover { background: #232329; }
+        .tt-button:hover {
+            background: rgba(255, 255, 255, 0.72);
+            transform: translateY(-1px);
+        }
         .tt-button-primary {
-            border-color: rgba(37, 244, 238, 0.8);
-            background: linear-gradient(90deg, #25f4ee 0%, #fe2c55 100%);
-            color: #050505;
+            border-color: rgba(255, 255, 255, 0.76);
+            background: linear-gradient(135deg, #8fa2e4 0%, #788dd4 100%);
+            color: #ffffff;
+            box-shadow: 0 18px 42px rgba(124, 145, 216, 0.34);
         }
         .tt-button-danger {
-            border-color: rgba(254, 44, 85, 0.65);
-            background: rgba(254, 44, 85, 0.12);
-            color: #ff8aa2;
+            border: 1px solid rgba(216, 108, 138, 0.26);
+            background: rgba(255, 255, 255, 0.44);
+            color: #b35e76;
+            box-shadow: 0 12px 28px rgba(216, 108, 138, 0.10);
         }
         .studio-header {
             position: sticky;
@@ -97,9 +149,10 @@
             z-index: 20;
             margin: -1.5rem -1.5rem 0;
             padding: 1.25rem 1.5rem 1rem;
-            background: linear-gradient(180deg, rgba(5, 5, 5, 0.98), rgba(5, 5, 5, 0.88));
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(18px);
+            background: linear-gradient(180deg, rgba(246, 244, 252, 0.94), rgba(246, 244, 252, 0.70));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.64);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
         }
         .panel-heading {
             display: flex;
@@ -109,7 +162,7 @@
             margin-bottom: 0.75rem;
         }
         .panel-title {
-            color: #f4f4f5;
+            color: #505b70;
             font-size: 11px;
             font-weight: 900;
             letter-spacing: 0.13em;
@@ -117,18 +170,19 @@
         }
         .panel-subtitle {
             margin-top: 0.2rem;
-            color: #71717a;
+            color: #8a94aa;
             font-size: 10px;
             line-height: 1.35;
         }
         .status-box {
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.56);
-            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.76);
+            background: rgba(255, 255, 255, 0.38);
+            border-radius: 18px;
             padding: 0.55rem 0.7rem;
-            color: #a1a1aa;
+            color: #6c7890;
             font-size: 10px;
             line-height: 1.45;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
         }
         .ops-grid {
             display: grid;
@@ -140,19 +194,54 @@
             padding: 0.45rem 0.6rem;
         }
         .danger-soft {
-            border-color: rgba(254, 44, 85, 0.45);
-            background: rgba(254, 44, 85, 0.08);
-            color: #ff9aae;
+            border-color: rgba(216, 108, 138, 0.28);
+            background: rgba(255, 255, 255, 0.42);
+            color: #b35e76;
         }
         .hint-text {
-            color: #71717a;
+            color: #8a94aa;
             font-size: 10px;
             line-height: 1.45;
         }
+        body > div:first-of-type {
+            background: linear-gradient(135deg, rgba(238, 237, 249, 0.86), rgba(229, 232, 246, 0.92)) !important;
+            border-color: rgba(255, 255, 255, 0.72) !important;
+            color: #6c7890;
+        }
+        body > div:nth-of-type(2) {
+            background: rgba(247, 246, 253, 0.72) !important;
+            border-color: rgba(255, 255, 255, 0.72) !important;
+            color: #536078;
+            box-shadow: -18px 0 54px rgba(97, 112, 164, 0.10);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        body > div:first-of-type > div:first-child {
+            color: #8792aa !important;
+        }
+        body > div:first-of-type > div:nth-child(3) {
+            border-color: rgba(255, 255, 255, 0.72) !important;
+            box-shadow: 0 26px 70px rgba(97, 112, 164, 0.22) !important;
+        }
+        h1 {
+            background-image: linear-gradient(135deg, #4f5a70, #7c91d8) !important;
+        }
+        label, .text-zinc-400, .text-zinc-500, .text-zinc-600 {
+            color: #7b879e !important;
+        }
+        .bg-black, .bg-\[\#0b0b0c\], .bg-\[\#121214\], .bg-\[\#1c1c1e\], .bg-zinc-800, .bg-zinc-900 {
+            background-color: rgba(255, 255, 255, 0.42) !important;
+        }
+        .border-zinc-800, .border-zinc-900, .border-zinc-700 {
+            border-color: rgba(255, 255, 255, 0.68) !important;
+        }
+        .text-zinc-200, .text-zinc-300, .text-zinc-400 {
+            color: #5b667c !important;
+        }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0b0b0c; }
-        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.20); }
+        ::-webkit-scrollbar-thumb { background: rgba(124, 145, 216, 0.42); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(124, 145, 216, 0.62); }
     </style>
 </head>
 <body class="w-screen h-screen flex overflow-hidden select-none">
@@ -185,7 +274,7 @@
                     <p id="buildVersionLabel" class="mt-1 text-[10px] font-bold uppercase tracking-wider text-zinc-600">Build: checking</p>
                 </div>
                 <div class="shrink-0 flex flex-col gap-2">
-                    <button id="cameraPowerButton" onclick="toggleCameraHardware()" class="tt-button border-[#25f4ee]/60 bg-cyan-950/20 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-cyan-100 hover:bg-cyan-950/40 rounded-full transition">
+                    <button id="cameraPowerButton" onclick="toggleCameraHardware()" class="tt-button px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider rounded-full transition">
                         📷 Turn Camera Off
                     </button>
                     <button onclick="resetStudioEngine()" class="tt-button-danger px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider hover:bg-red-950/40 rounded-full transition">⚠️ RESET STUDIO ENGINE</button>
@@ -247,7 +336,7 @@
                 </select>
                 <div class="relative overflow-hidden rounded-lg border border-zinc-800 bg-black aspect-video">
                     <video id="rawWebcam" autoplay muted playsinline class="h-full w-full object-cover"></video>
-                    <div id="cameraStatus" class="absolute inset-x-0 bottom-0 bg-black/80 px-3 py-1.5 text-[10px] uppercase tracking-wider text-zinc-400">
+                    <div id="cameraStatus" class="absolute inset-x-2 bottom-2 rounded-full border border-white/80 bg-white/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#6c7890] shadow-sm">
                         Waiting for camera permission
                     </div>
                 </div>
@@ -255,7 +344,7 @@
                 <div id="cameraDiagnosticsList" class="status-box">
                     Detected cameras will appear here after refresh.
                 </div>
-                <p class="hint-text">Use phone/Continuity directly when Chrome exposes it. Auto front is best on mobile browsers.</p>
+                <p class="hint-text">For a true iPhone front camera, open the Vercel link on your iPhone and choose Auto Front/Selfie. Mac Continuity Camera may only expose the rear iPhone camera to Chrome.</p>
             </div>
 
             <div class="tt-panel p-4 space-y-3">
@@ -298,7 +387,7 @@
                 <button onclick="clearSnapCredentials()" class="w-full tt-button danger-soft py-2 text-xs font-bold uppercase tracking-wider hover:bg-red-950/25">
                     Clear Snap Credentials
                 </button>
-                <button id="nativeGlowButton" onclick="toggleNativeStudioGlow()" class="w-full rounded-full border border-amber-300/70 bg-amber-950/10 px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-amber-200 hover:bg-amber-950/25 transition">
+                <button id="nativeGlowButton" onclick="toggleNativeStudioGlow()" class="w-full tt-button px-3 py-2 text-xs font-extrabold uppercase tracking-wider transition">
                     ✨ Turn On Native Studio Glow
                 </button>
             </div>
@@ -322,19 +411,19 @@
                         <div class="panel-subtitle">Read tighter and keep slide notes synced.</div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="switchPrompterMode('master')" id="btn-prompter-master" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-900 transition">Paste Script</button>
-                        <button onclick="switchPrompterMode('slides')" id="btn-prompter-slides" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition">Slide Deck</button>
+                        <button onclick="switchPrompterMode('master')" id="btn-prompter-master" class="text-[10px] uppercase font-bold tracking-wider px-4 py-2 rounded-xl border border-white/80 bg-white/75 text-[#4f5b72] shadow-sm transition">Paste Script</button>
+                        <button onclick="switchPrompterMode('slides')" id="btn-prompter-slides" class="text-[10px] uppercase font-bold tracking-wider px-4 py-2 rounded-xl border border-white/55 bg-white/35 text-[#7b879e] transition">Slide Deck</button>
                     </div>
                 </div>
 
-                <div class="bg-black border border-zinc-900 p-4 rounded-xl space-y-2">
-                    <div id="teleprompterDisplay" class="teleprompter-text font-medium text-cyan-50/90 h-[140px] overflow-y-auto flex flex-col scroll-smooth">
+                <div class="script-surface p-4 rounded-xl space-y-2">
+                    <div id="teleprompterDisplay" class="teleprompter-text h-[140px] overflow-y-auto flex flex-col scroll-smooth">
                         Select Slide Deck to upload presentation graphics or track copy anchors here.
                     </div>
                 </div>
 
                 <div id="prompterContainerMaster" class="space-y-2">
-                    <textarea id="masterScriptInput" oninput="updateMasterScript(this.value)" placeholder="Paste your massive, long-form live selling script here..." class="w-full h-28 bg-[#1c1c1e] text-xs p-2.5 border border-zinc-800 rounded-md text-zinc-300 focus:outline-none focus:border-zinc-700 custom-scroll" style="resize: none;"></textarea>
+                    <textarea id="masterScriptInput" oninput="updateMasterScript(this.value)" placeholder="Paste your massive, long-form live selling script here..." class="script-input w-full h-28 p-2.5 focus:outline-none custom-scroll" style="resize: none;"></textarea>
                     <div class="flex gap-2">
                         <button onclick="scrollPrompter('up')" class="flex-1 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Scroll Up &#9650;</button>
                         <button onclick="scrollPrompter('down')" class="flex-1 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Scroll Down &#9660;</button>
@@ -672,18 +761,18 @@
                 ? (snapActive ? 'Camera: Snap Filter' : 'Camera: Raw')
                 : 'Camera: Off';
             feedStatusBadge.className = snapActive
-                ? 'rounded-full border border-cyan-400/70 bg-cyan-950/25 px-3 py-1 text-cyan-200'
+                ? 'rounded-full border border-white/80 bg-white/50 px-3 py-1 text-[#6f82cb] shadow-sm'
                 : cameraHardwareEnabled
-                    ? 'rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400'
-                    : 'rounded-full border border-red-800/70 bg-red-950/30 px-3 py-1 text-red-300';
+                    ? 'rounded-full border border-white/80 bg-white/42 px-3 py-1 text-[#68748c] shadow-sm'
+                    : 'rounded-full border border-rose-200/80 bg-rose-100/55 px-3 py-1 text-rose-500 shadow-sm';
 
             const environmentLabel = getEnvironmentLabel();
             environmentStatusBadge.innerText = environmentLabel === 'FILE MODE'
                 ? 'Open localhost for camera + filters'
                 : `Preview: ${environmentLabel}`;
             environmentStatusBadge.className = environmentLabel === 'FILE MODE'
-                ? 'rounded-full border border-amber-500/60 bg-amber-950/20 px-3 py-1 text-amber-200'
-                : 'rounded-full border border-cyan-400/50 bg-cyan-950/20 px-3 py-1 text-cyan-300';
+                ? 'rounded-full border border-amber-200/80 bg-amber-100/60 px-3 py-1 text-amber-600 shadow-sm'
+                : 'rounded-full border border-white/80 bg-white/50 px-3 py-1 text-[#6f82cb] shadow-sm';
         }
 
         function updateSnapOriginHint() {
@@ -773,6 +862,33 @@
             return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         }
 
+        function buildCameraConstraint(sourceId = '') {
+            const portraitQuality = {
+                width: { ideal: 1080 },
+                height: { ideal: 1920 },
+                aspectRatio: { ideal: 9 / 16 }
+            };
+
+            if (!sourceId || sourceId === '__selfie__') {
+                return {
+                    ...portraitQuality,
+                    facingMode: { ideal: 'user' }
+                };
+            }
+
+            if (sourceId === '__phone__') {
+                return {
+                    ...portraitQuality,
+                    facingMode: { ideal: 'user' }
+                };
+            }
+
+            return {
+                ...portraitQuality,
+                deviceId: { exact: sourceId }
+            };
+        }
+
         async function startCamera(deviceId = '') {
             cameraHardwareEnabled = true;
             updateCameraPowerButton();
@@ -780,33 +896,25 @@
                 currentStream.getTracks().forEach(track => track.stop());
             }
 
-            let resolvedDeviceId = deviceId;
+            let resolvedDeviceId = deviceId || '__selfie__';
             if (deviceId === '__phone__') {
                 resolvedDeviceId = await findPreferredPhoneCameraId();
                 if (!resolvedDeviceId) {
-                    cameraStatus.innerText = 'Phone camera not found - using auto front camera';
+                    cameraStatus.innerText = 'No labeled selfie phone camera found - requesting front/selfie camera';
+                    resolvedDeviceId = '__phone__';
                 }
             }
-
-            const frontCameraConstraints = {
-                facingMode: { ideal: 'user' },
-                width: { ideal: 1080 },
-                height: { ideal: 1920 },
-                aspectRatio: { ideal: 9 / 16 }
-            };
 
             try {
                 cameraStatus.innerText = 'Requesting camera permission';
                 currentStream = await navigator.mediaDevices.getUserMedia({
-                    video: resolvedDeviceId
-                        ? { deviceId: { exact: resolvedDeviceId }, width: { ideal: 1080 }, height: { ideal: 1920 }, aspectRatio: { ideal: 9 / 16 } }
-                        : frontCameraConstraints,
+                    video: buildCameraConstraint(resolvedDeviceId),
                     audio: false
                 });
                 video.srcObject = currentStream;
                 await video.play();
                 const activeLabel = currentStream.getVideoTracks()[0]?.label || 'Camera connected';
-                cameraStatus.innerText = activeLabel;
+                cameraStatus.innerText = `${activeLabel} ${isLikelyRearCameraLabel(activeLabel) ? '- rear camera detected' : ''}`.trim();
                 if (snapSession && snapFiltersEnabled) {
                     await routeStreamThroughSnap();
                 }
@@ -819,15 +927,15 @@
         function updateCameraPowerButton() {
             cameraPowerButton.innerText = cameraHardwareEnabled ? '📷 Turn Camera Off' : '🎥 Turn Camera On';
             cameraPowerButton.className = cameraHardwareEnabled
-                ? 'tt-button border-[#25f4ee]/60 bg-cyan-950/20 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-cyan-100 hover:bg-cyan-950/40 rounded-full transition'
-                : 'tt-button border-[#fe2c55]/70 bg-red-950/25 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-red-100 hover:bg-red-950/40 rounded-full transition';
+                ? 'tt-button px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider rounded-full transition'
+                : 'tt-button border-rose-200/80 bg-rose-100/60 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-rose-500 rounded-full transition';
         }
 
         function updateNativeGlowButton() {
             nativeGlowButton.innerText = nativeStudioGlowEnabled ? '✨ Turn Off Native Studio Glow' : '✨ Turn On Native Studio Glow';
             nativeGlowButton.className = nativeStudioGlowEnabled
-                ? 'w-full rounded-full border border-amber-300 bg-amber-300/15 px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-amber-100 hover:bg-amber-300/20 transition'
-                : 'w-full rounded-full border border-amber-300/70 bg-amber-950/10 px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-amber-200 hover:bg-amber-950/25 transition';
+                ? 'w-full tt-button tt-button-primary px-3 py-2 text-xs font-extrabold uppercase tracking-wider transition'
+                : 'w-full tt-button px-3 py-2 text-xs font-extrabold uppercase tracking-wider transition';
         }
 
         function toggleNativeStudioGlow() {
@@ -894,13 +1002,13 @@
             }
 
             const autoOption = document.createElement('option');
-            autoOption.value = '';
+            autoOption.value = '__selfie__';
             autoOption.textContent = 'Auto Front / Selfie Camera';
             cameraSelect.appendChild(autoOption);
 
             const phoneOption = document.createElement('option');
             phoneOption.value = '__phone__';
-            phoneOption.textContent = 'Prefer Phone / iPhone Camera';
+            phoneOption.textContent = 'Prefer iPhone Selfie Camera';
             cameraSelect.appendChild(phoneOption);
 
             cameras.forEach((camera, index) => {
@@ -912,6 +1020,8 @@
 
             if (activeDeviceId) {
                 cameraSelect.value = activeDeviceId;
+            } else {
+                cameraSelect.value = '__selfie__';
             }
         }
 
@@ -924,7 +1034,15 @@
                 .map((camera, index) => {
                     const label = escapeHtml(camera.label || `Camera ${index + 1} - label hidden until permission`);
                     const priority = getCameraPriority(camera);
-                    const tag = priority >= 4 ? 'PHONE' : priority === 3 ? 'FRONT' : priority === 2 ? 'VIRTUAL' : 'CAMERA';
+                    const tag = isLikelyRearCameraLabel(label)
+                        ? 'REAR'
+                        : priority >= 5
+                            ? 'SELFIE'
+                            : priority >= 4
+                                ? 'PHONE'
+                                : priority === 3
+                                    ? 'FRONT'
+                                    : priority === 2 ? 'VIRTUAL' : 'CAMERA';
                     return `<div class="flex items-start justify-between gap-2 border-b border-zinc-900/80 py-1 last:border-b-0"><span>${index + 1}. ${label}</span><span class="text-cyan-300">${tag}</span></div>`;
                 })
                 .join('');
@@ -943,20 +1061,37 @@
             try {
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const cameras = devices.filter(device => device.kind === 'videoinput');
-                const phoneCamera = cameras
-                    .sort((a, b) => getCameraPriority(b) - getCameraPriority(a))
-                    .find(camera => getCameraPriority(camera) >= 4);
-                return phoneCamera?.deviceId || '';
+                const frontPhoneCamera = cameras
+                    .filter(camera => isLikelyPhoneLabel(camera.label) && isLikelyFrontCameraLabel(camera.label))
+                    .sort((a, b) => getCameraPriority(b) - getCameraPriority(a))[0];
+                return frontPhoneCamera?.deviceId || '';
             } catch (err) {
                 console.warn('Unable to locate preferred phone camera.', err);
                 return '';
             }
         }
 
+        function isLikelyPhoneLabel(label = '') {
+            const normalized = label.toLowerCase();
+            return normalized.includes('iphone') || normalized.includes('continuity') || normalized.includes('phone') || normalized.includes('mobile');
+        }
+
+        function isLikelyFrontCameraLabel(label = '') {
+            const normalized = label.toLowerCase();
+            return normalized.includes('front') || normalized.includes('selfie') || normalized.includes('user') || normalized.includes('facetime');
+        }
+
+        function isLikelyRearCameraLabel(label = '') {
+            const normalized = label.toLowerCase();
+            return normalized.includes('back') || normalized.includes('rear') || normalized.includes('environment');
+        }
+
         function getCameraPriority(camera) {
             const label = (camera.label || '').toLowerCase();
-            if (label.includes('iphone') || label.includes('continuity') || label.includes('phone') || label.includes('mobile')) return 4;
-            if (label.includes('front') || label.includes('facetime') || label.includes('user')) return 3;
+            if (isLikelyPhoneLabel(label) && isLikelyFrontCameraLabel(label)) return 5;
+            if (isLikelyRearCameraLabel(label)) return 0;
+            if (isLikelyPhoneLabel(label)) return 4;
+            if (isLikelyFrontCameraLabel(label)) return 3;
             if (label.includes('snap') || label.includes('obs') || label.includes('virtual')) return 2;
             return 1;
         }
@@ -1672,9 +1807,9 @@
         function renderProductBanner() {
             const margin = Math.max(46, canvas.width * 0.046);
             const bannerWidth = canvas.width - (margin * 2);
-            const bannerHeight = 286;
+            const bannerHeight = 292;
             const topY = 180;
-            const radius = 28;
+            const radius = 30;
             const leftX = margin + 45;
             const rightX = canvas.width - margin - 45;
             const splitX = margin + bannerWidth * 0.64;
@@ -1689,55 +1824,63 @@
             const stockY = topY + 208;
 
             ctx.save();
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.52)';
+            ctx.shadowColor = 'rgba(251, 191, 36, 0.16)';
             ctx.shadowBlur = 34;
-            ctx.shadowOffsetY = 16;
-            const cardFill = ctx.createLinearGradient(margin, topY, margin + bannerWidth, topY + bannerHeight);
-            cardFill.addColorStop(0, '#060607');
-            cardFill.addColorStop(0.58, '#0A0A0C');
-            cardFill.addColorStop(1, '#121214');
-            ctx.fillStyle = cardFill;
-            ctx.strokeStyle = 'rgba(212, 163, 89, 0.34)';
-            ctx.lineWidth = 2;
+            ctx.shadowOffsetY = 12;
+            ctx.fillStyle = 'rgba(12, 12, 14, 0.68)';
             ctx.beginPath();
             ctx.roundRect(margin, topY, bannerWidth, bannerHeight, radius);
             ctx.fill();
-            ctx.stroke();
             ctx.restore();
 
-            const topGloss = ctx.createLinearGradient(0, topY, 0, topY + bannerHeight);
-            topGloss.addColorStop(0, 'rgba(255, 255, 255, 0.09)');
-            topGloss.addColorStop(0.16, 'rgba(255, 255, 255, 0.025)');
-            topGloss.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = topGloss;
+            const glassFill = ctx.createLinearGradient(margin, topY, margin + bannerWidth, topY + bannerHeight);
+            glassFill.addColorStop(0, 'rgba(255, 255, 255, 0.13)');
+            glassFill.addColorStop(0.18, 'rgba(255, 255, 255, 0.055)');
+            glassFill.addColorStop(0.66, 'rgba(255, 255, 255, 0.018)');
+            glassFill.addColorStop(1, 'rgba(255, 255, 255, 0.07)');
+            ctx.fillStyle = glassFill;
             ctx.beginPath();
-            ctx.roundRect(margin + 2, topY + 2, bannerWidth - 4, bannerHeight - 4, radius - 2);
+            ctx.roundRect(margin, topY, bannerWidth, bannerHeight, radius);
             ctx.fill();
 
-            const accentLine = ctx.createLinearGradient(margin + radius, topY, margin + bannerWidth - radius, topY);
-            accentLine.addColorStop(0, 'rgba(37, 244, 238, 0.72)');
-            accentLine.addColorStop(0.5, 'rgba(212, 163, 89, 0.42)');
-            accentLine.addColorStop(1, 'rgba(254, 44, 85, 0.58)');
-            ctx.strokeStyle = accentLine;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(margin + 1, topY + 1, bannerWidth - 2, bannerHeight - 2, radius - 1);
+            ctx.stroke();
+
+            ctx.strokeStyle = 'rgba(212, 163, 89, 0.34)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(margin + radius, topY + 1);
-            ctx.lineTo(margin + bannerWidth - radius, topY + 1);
+            ctx.roundRect(margin + 4, topY + 4, bannerWidth - 8, bannerHeight - 8, radius - 4);
+            ctx.stroke();
+
+            const topSheen = ctx.createLinearGradient(margin + 34, topY, margin + bannerWidth - 34, topY);
+            topSheen.addColorStop(0, 'rgba(255, 255, 255, 0)');
+            topSheen.addColorStop(0.18, 'rgba(255, 255, 255, 0.36)');
+            topSheen.addColorStop(0.5, 'rgba(251, 191, 36, 0.30)');
+            topSheen.addColorStop(0.82, 'rgba(255, 255, 255, 0.28)');
+            topSheen.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.strokeStyle = topSheen;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(margin + radius + 4, topY + 2);
+            ctx.lineTo(margin + bannerWidth - radius - 4, topY + 2);
             ctx.stroke();
 
             ctx.textAlign = 'left';
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.88)';
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.86)';
             ctx.font = '800 16px ui-monospace, SFMono-Regular, Menlo, monospace';
-            ctx.fillText('DIGITAL PRODUCT DROP', leftX, topY + 42);
+            ctx.fillText('DOLLHOUSE DIGITAL DROP', leftX, topY + 42);
 
             ctx.fillStyle = '#ffffff';
             const rawTitleText = activeProduct.name.toUpperCase();
             const titleText = rawTitleText.length > 20 ? `${rawTitleText.slice(0, 20)}...` : rawTitleText;
-            setFittedFont(titleText, '900', 38, 'system-ui', leftMax, 26);
+            setFittedFont(titleText, '900', 39, 'system-ui', leftMax, 26);
             ctx.fillText(titleText, leftX, titleY);
 
             const valueText = `VALUE: ${activeProduct.value || '$297'}`.toUpperCase();
-            ctx.fillStyle = '#d4d4d8';
+            ctx.fillStyle = 'rgba(244, 244, 245, 0.84)';
             setFittedFont(valueText, '800', 22, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 16);
             ctx.fillText(valueText, leftX, valueY);
 
@@ -1748,7 +1891,7 @@
             ctx.fillText(originalPriceText, leftX, originalPriceY);
 
             const originalMetrics = ctx.measureText(originalPriceText);
-            ctx.strokeStyle = '#F43F5E';
+            ctx.strokeStyle = 'rgba(244, 63, 94, 0.95)';
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.moveTo(leftX, originalPriceY - 10);
@@ -1767,9 +1910,9 @@
             const liveMetrics = ctx.measureText(liveOffer);
             const badgeX = Math.min(leftX + liveMetrics.width + 28, splitX - badgeWidth - 18);
             const badgeY = offerY - 39;
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.12)';
-            ctx.strokeStyle = 'rgba(251, 191, 36, 0.64)';
-            ctx.lineWidth = 2;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.055)';
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.66)';
+            ctx.lineWidth = 1.8;
             ctx.beginPath();
             ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
             ctx.fill();
@@ -1784,14 +1927,14 @@
             const ctaText = (activeProduct.cta || 'LINK IN BIO').toUpperCase();
             const safeCtaText = ctaText.length > 22 ? `${ctaText.slice(0, 22)}...` : ctaText;
             ctx.fillStyle = '#ffffff';
-            setFittedFont(safeCtaText, '950', 34, 'system-ui', rightMax, 20);
+            setFittedFont(safeCtaText, '950', 35, 'system-ui', rightMax, 20);
             ctx.fillText(safeCtaText, rightX, ctaY);
 
             const ctaMetrics = ctx.measureText(safeCtaText);
             const underlineWidth = Math.min(ctaMetrics.width, rightMax);
             const underlineGradient = ctx.createLinearGradient(rightX - underlineWidth, ctaY + 13, rightX, ctaY + 13);
-            underlineGradient.addColorStop(0, 'rgba(37, 244, 238, 0.15)');
-            underlineGradient.addColorStop(1, 'rgba(52, 211, 153, 0.95)');
+            underlineGradient.addColorStop(0, 'rgba(37, 244, 238, 0.10)');
+            underlineGradient.addColorStop(1, 'rgba(52, 211, 153, 0.86)');
             ctx.strokeStyle = underlineGradient;
             ctx.lineWidth = 5;
             ctx.lineCap = 'round';
@@ -1802,7 +1945,7 @@
             ctx.textAlign = 'right';
 
             const expireText = 'BONUS EXPIRES WHEN TIMER HITS ZERO';
-            ctx.fillStyle = '#FBBF24';
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.92)';
             setFittedFont(expireText, '800', 20, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 14);
             ctx.fillText(expireText, rightX, timerLabelY);
 
@@ -1812,17 +1955,17 @@
             const stockWidth = Math.min(ctx.measureText(stockText).width + 42, rightMax);
             const stockX = rightX - stockWidth;
             const stockPillY = stockY - 31;
-            ctx.fillStyle = 'rgba(244, 63, 94, 0.13)';
-            ctx.strokeStyle = 'rgba(244, 63, 94, 0.46)';
+            ctx.fillStyle = 'rgba(244, 63, 94, 0.15)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.roundRect(stockX, stockPillY, stockWidth, 44, 22);
             ctx.fill();
             ctx.stroke();
-            ctx.fillStyle = '#F43F5E';
+            ctx.fillStyle = '#ff5f7e';
             ctx.fillText(stockText, rightX - 20, stockY);
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.62)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.58)';
             setFittedFont('INSTANT DOWNLOAD AFTER CHECKOUT', '750', 15, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
             ctx.fillText('INSTANT DOWNLOAD AFTER CHECKOUT', rightX, topY + 252);
         }
@@ -1871,16 +2014,16 @@
             const slidesPanel = document.getElementById('prompterContainerSlides');
 
             if (mode === 'master') {
-                masterBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-900 transition";
-                slidesBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition";
+                masterBtn.className = "text-[10px] uppercase font-bold tracking-wider px-4 py-2 rounded-xl border border-white/80 bg-white/75 text-[#4f5b72] shadow-sm transition";
+                slidesBtn.className = "text-[10px] uppercase font-bold tracking-wider px-4 py-2 rounded-xl border border-white/55 bg-white/35 text-[#7b879e] transition";
                 masterPanel.classList.remove('hidden');
                 slidesPanel.classList.add('hidden');
                 masterPanel.style.display = 'block';
                 slidesPanel.style.display = 'none';
                 updateMasterScript(document.getElementById('masterScriptInput').value);
             } else {
-                slidesBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-900 transition";
-                masterBtn.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition";
+                slidesBtn.className = "text-[10px] uppercase font-bold tracking-wider px-4 py-2 rounded-xl border border-white/80 bg-white/75 text-[#4f5b72] shadow-sm transition";
+                masterBtn.className = "text-[10px] uppercase font-bold tracking-wider px-4 py-2 rounded-xl border border-white/55 bg-white/35 text-[#7b879e] transition";
                 slidesPanel.classList.remove('hidden');
                 masterPanel.classList.add('hidden');
                 slidesPanel.style.display = 'block';
@@ -2107,8 +2250,8 @@
             const ready = environmentOk && cameraOk && productOk;
             liveCheckStatus.innerText = `${ready ? 'LIVE READY' : 'CHECK SETUP'} - ${checks.join(' / ')}`;
             liveCheckStatus.className = ready
-                ? 'rounded-lg border border-emerald-500/40 bg-emerald-950/20 px-3 py-2 text-[10px] uppercase tracking-wider text-emerald-200'
-                : 'rounded-lg border border-amber-500/40 bg-amber-950/20 px-3 py-2 text-[10px] uppercase tracking-wider text-amber-200';
+                ? 'status-box uppercase tracking-wider border-emerald-200/80 bg-emerald-100/45 text-emerald-600'
+                : 'status-box uppercase tracking-wider border-amber-200/80 bg-amber-100/55 text-amber-600';
         }
 
         function clearProduct() {
