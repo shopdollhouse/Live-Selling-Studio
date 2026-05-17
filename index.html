@@ -162,6 +162,9 @@
                 <div id="snapStatus" class="rounded-lg border border-zinc-900 bg-black px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
                     Camera Kit idle
                 </div>
+                <button id="nativeGlowButton" onclick="toggleNativeStudioGlow()" class="w-full rounded-full border border-amber-300/70 bg-amber-950/10 px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-amber-200 hover:bg-amber-950/25 transition">
+                    ✨ Turn On Native Studio Glow
+                </button>
             </div>
 
             <button id="cameraPowerButton" onclick="toggleCameraHardware()" class="w-full tt-button border-zinc-700 bg-zinc-950 py-3 text-xs font-extrabold uppercase tracking-wider text-zinc-200 hover:bg-zinc-900">
@@ -246,7 +249,7 @@
                 <div class="pt-2 border-t border-zinc-900 space-y-2">
                     <div class="flex items-center justify-between gap-3">
                         <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Urgency Countdown Timer (Minutes)</label>
-                        <span id="sidebarTimerDisplay" class="font-mono text-xs font-bold text-cyan-300">0:00</span>
+                        <span id="sidebarTimerDisplay" class="font-sans text-xs font-bold text-cyan-300">0:00</span>
                     </div>
                     <div class="flex gap-2">
                         <input type="number" id="timerDuration" value="5" min="1" max="60" class="w-20 tt-input text-center">
@@ -302,6 +305,24 @@
                     <input id="muteVoiceAnnouncements" type="checkbox" class="h-4 w-4 accent-zinc-400">
                     <span>🔇 Mute AI Voice Announcements</span>
                 </label>
+                <div class="rounded-xl border border-zinc-800 bg-black/70 p-3 space-y-3">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold tracking-wider text-cyan-300 mb-1">Voice Profile</label>
+                        <select id="voiceSelect" class="w-full tt-input">
+                            <option value="">Loading system voices...</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex justify-between text-[10px] text-zinc-500"><span>Speed</span><span id="voiceRateValue">1.0x</span></div>
+                            <input id="voiceRate" type="range" min="0.5" max="2" step="0.1" value="1.0" oninput="updateVoiceControls()" class="w-full accent-cyan-400">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] text-zinc-500"><span>Pitch</span><span id="voicePitchValue">1.0</span></div>
+                            <input id="voicePitch" type="range" min="0.5" max="1.5" step="0.1" value="1.0" oninput="updateVoiceControls()" class="w-full accent-cyan-400">
+                        </div>
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="triggerAlert('follow', 'Mandy')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Follow</button>
                     <button onclick="triggerAlert('like', 'Designer')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Like</button>
@@ -337,11 +358,17 @@
         const cameraPowerButton = document.getElementById('cameraPowerButton');
         const snapStatus = document.getElementById('snapStatus');
         const snapFilterToggle = document.getElementById('snapFilterToggle');
+        const nativeGlowButton = document.getElementById('nativeGlowButton');
         const feedStatusBadge = document.getElementById('feedStatusBadge');
         const environmentStatusBadge = document.getElementById('environmentStatusBadge');
         const sidebarTimerDisplay = document.getElementById('sidebarTimerDisplay');
         const muteVoiceAnnouncements = document.getElementById('muteVoiceAnnouncements');
         const snapLensSelect = document.getElementById('snapLensSelect');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const voiceRate = document.getElementById('voiceRate');
+        const voicePitch = document.getElementById('voicePitch');
+        const voiceRateValue = document.getElementById('voiceRateValue');
+        const voicePitchValue = document.getElementById('voicePitchValue');
 
         let viewMode = 'presentation';
         let currentShape = 'square';
@@ -357,6 +384,7 @@
         let snapAvailableLenses = [];
         let snapFiltersEnabled = false;
         let cameraHardwareEnabled = true;
+        let nativeStudioGlowEnabled = false;
 
         let uploadedSlides = [];
         let activeSlideIndex = 0;
@@ -373,6 +401,8 @@
         let countdownTimerInterval = null;
         let recentBuyerName = null;
         let buyerAlertTimer = 0;
+        let availableVoices = [];
+        let premiumVoice = null;
 
         const soundMap = {
             follow: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav'),
@@ -380,6 +410,79 @@
             gift: new Audio('https://assets.mixkit.co/active_storage/sfx/911/911-84.wav'),
             sold: new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-84.wav')
         };
+
+        const curatedVoiceProfiles = [
+            {
+                label: 'Natural Female 1',
+                tokens: ['microsoft aria', 'google us english', 'samantha', 'ava', 'allison', 'victoria']
+            },
+            {
+                label: 'Natural Female 2',
+                tokens: ['microsoft jenny', 'google uk english female', 'serena', 'susan', 'karen', 'moira']
+            },
+            {
+                label: 'Natural Male 1',
+                tokens: ['microsoft guy', 'google uk english male', 'daniel', 'alex']
+            },
+            {
+                label: 'Natural Male 2',
+                tokens: ['microsoft davis', 'microsoft tony', 'google us english', 'fred', 'tom']
+            }
+        ];
+
+        function initializeVoiceProfiles() {
+            if (!window.speechSynthesis) {
+                voiceSelect.innerHTML = '<option value="">Speech unavailable in this browser</option>';
+                return;
+            }
+
+            availableVoices = window.speechSynthesis.getVoices().filter(voice => /^en[-_]/i.test(voice.lang));
+            voiceSelect.innerHTML = '';
+
+            if (!availableVoices.length) {
+                voiceSelect.innerHTML = '<option value="">No English voices found yet</option>';
+                return;
+            }
+
+            const curatedOptions = buildCuratedVoiceOptions(availableVoices);
+            premiumVoice = curatedOptions[0]?.voice || null;
+
+            curatedOptions.forEach((profile) => {
+                const option = document.createElement('option');
+                option.value = profile.voice.name;
+                option.textContent = `${profile.label}: ${profile.voice.name}`;
+                voiceSelect.appendChild(option);
+            });
+
+            voiceSelect.value = curatedOptions[0]?.voice.name || '';
+            updateVoiceControls();
+        }
+
+        function buildCuratedVoiceOptions(voices) {
+            const usedVoices = new Set();
+            return curatedVoiceProfiles.map((profile) => {
+                let voice = voices.find(candidate => {
+                    const name = candidate.name.toLowerCase();
+                    return !usedVoices.has(candidate.name) && profile.tokens.some(token => name.includes(token));
+                });
+
+                if (!voice) {
+                    voice = voices.find(candidate => !usedVoices.has(candidate.name)) || voices[0];
+                }
+
+                usedVoices.add(voice.name);
+                return { label: profile.label, voice };
+            });
+        }
+
+        function getSelectedVoice() {
+            return availableVoices.find(voice => voice.name === voiceSelect.value) || premiumVoice || availableVoices[0] || null;
+        }
+
+        function updateVoiceControls() {
+            voiceRateValue.innerText = `${parseFloat(voiceRate.value).toFixed(1)}x`;
+            voicePitchValue.innerText = parseFloat(voicePitch.value).toFixed(1);
+        }
 
         function getEnvironmentLabel() {
             const protocol = window.location.protocol;
@@ -446,6 +549,21 @@
             cameraPowerButton.className = cameraHardwareEnabled
                 ? 'w-full tt-button border-zinc-700 bg-zinc-950 py-3 text-xs font-extrabold uppercase tracking-wider text-zinc-200 hover:bg-zinc-900'
                 : 'w-full tt-button border-[#25f4ee]/70 bg-cyan-950/20 py-3 text-xs font-extrabold uppercase tracking-wider text-cyan-200 hover:bg-cyan-950/40';
+        }
+
+        function updateNativeGlowButton() {
+            nativeGlowButton.innerText = nativeStudioGlowEnabled ? '✨ Turn Off Native Studio Glow' : '✨ Turn On Native Studio Glow';
+            nativeGlowButton.className = nativeStudioGlowEnabled
+                ? 'w-full rounded-full border border-amber-300 bg-amber-300/15 px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-amber-100 hover:bg-amber-300/20 transition'
+                : 'w-full rounded-full border border-amber-300/70 bg-amber-950/10 px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-amber-200 hover:bg-amber-950/25 transition';
+        }
+
+        function toggleNativeStudioGlow() {
+            nativeStudioGlowEnabled = !nativeStudioGlowEnabled;
+            updateNativeGlowButton();
+            snapStatus.innerText = nativeStudioGlowEnabled
+                ? 'Native Studio Glow ready as local camera fallback'
+                : 'Native Studio Glow off';
         }
 
         async function toggleCameraHardware() {
@@ -721,6 +839,11 @@
         syncOverlayControls();
         updateOfferVisibilityButton();
         updateStatusBadges();
+        updateNativeGlowButton();
+        initializeVoiceProfiles();
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = initializeVoiceProfiles;
+        }
         loadCameraDevices();
         requestAnimationFrame(renderLoop);
 
@@ -730,6 +853,7 @@
             const snapReady = cameraHardwareEnabled && snapFiltersEnabled && snapOutputCanvas && snapOutputCanvas.width > 0 && snapOutputCanvas.height > 0;
             const activeCameraSource = snapFiltersEnabled ? snapOutputCanvas : video;
             const activeCameraReady = snapFiltersEnabled ? snapReady : cameraReady;
+            const useNativeGlow = nativeStudioGlowEnabled && !snapReady;
             sidebarTimerDisplay.innerText = formatCountdown(countdownTimeRemaining);
             updateStatusBadges();
 
@@ -748,7 +872,7 @@
                 if (!cameraHardwareEnabled) {
                     renderCameraOffFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
                 } else if (activeCameraReady) {
-                    drawMediaCover(activeCameraSource, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size);
+                    drawCameraFeed(activeCameraSource, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size, useNativeGlow);
                 } else if (snapFiltersEnabled) {
                     renderSnapWaitingFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
                 } else {
@@ -765,7 +889,7 @@
                         "Turn camera on from the control panel"
                     );
                 } else if (activeCameraReady) {
-                    drawMediaCover(activeCameraSource, 0, 0, canvas.width, canvas.height);
+                    drawCameraFeed(activeCameraSource, 0, 0, canvas.width, canvas.height, useNativeGlow);
                     renderStageVignette();
                 } else if (snapFiltersEnabled) {
                     renderTikTokStageBackground();
@@ -825,6 +949,31 @@
             }
 
             ctx.drawImage(source, cropX, cropY, cropWidth, cropHeight, targetX, targetY, targetWidth, targetHeight);
+        }
+
+        function drawCameraFeed(source, targetX, targetY, targetWidth, targetHeight, useNativeGlow = false) {
+            if (!useNativeGlow) {
+                drawMediaCover(source, targetX, targetY, targetWidth, targetHeight);
+                return;
+            }
+
+            ctx.save();
+            ctx.filter = 'brightness(1.08) contrast(1.03)';
+            drawMediaCover(source, targetX, targetY, targetWidth, targetHeight);
+            ctx.restore();
+
+            ctx.save();
+            ctx.globalAlpha = 0.35;
+            ctx.filter = 'blur(4px) brightness(1.05) contrast(1.02)';
+            drawMediaCover(source, targetX, targetY, targetWidth, targetHeight);
+            ctx.restore();
+
+            ctx.save();
+            ctx.globalAlpha = 1;
+            ctx.filter = 'none';
+            ctx.fillStyle = 'rgba(255, 235, 215, 0.04)';
+            ctx.fillRect(targetX, targetY, targetWidth, targetHeight);
+            ctx.restore();
         }
 
         function renderTikTokStageBackground() {
@@ -989,14 +1138,8 @@
 
         function renderCameraFrame(x, y, size) {
             ctx.save();
-            const ring = ctx.createLinearGradient(x - size / 2, y - size / 2, x + size / 2, y + size / 2);
-            ring.addColorStop(0, 'rgba(37, 244, 238, 0.95)');
-            ring.addColorStop(0.48, 'rgba(255, 255, 255, 0.58)');
-            ring.addColorStop(1, 'rgba(254, 44, 85, 0.9)');
-            ctx.shadowColor = 'rgba(37, 244, 238, 0.28)';
-            ctx.shadowBlur = 24;
-            ctx.strokeStyle = ring;
-            ctx.lineWidth = 7;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.lineWidth = 3;
             ctx.beginPath();
             if (currentShape === 'circle') {
                 ctx.arc(x, y, size / 2, 0, Math.PI * 2);
@@ -1011,10 +1154,6 @@
             } else {
                 ctx.rect(x - size / 2, y - size / 2, size, size);
             }
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-            ctx.lineWidth = 2;
             ctx.stroke();
             ctx.restore();
         }
@@ -1177,7 +1316,7 @@
             ctx.fill();
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 38px monospace';
+            ctx.font = 'bold 38px system-ui, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(timerStr, canvas.width - 150, timerY + 52);
             ctx.restore();
@@ -1554,6 +1693,14 @@
 
             if (!muteVoiceAnnouncements.checked && speechText) {
                 const utterance = new SpeechSynthesisUtterance(speechText);
+                const selectedVoice = getSelectedVoice();
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+                utterance.rate = parseFloat(voiceRate.value) || 1;
+                utterance.pitch = parseFloat(voicePitch.value) || 1;
+                utterance.volume = 1;
+                window.speechSynthesis.cancel();
                 window.speechSynthesis.speak(utterance);
             }
         }
