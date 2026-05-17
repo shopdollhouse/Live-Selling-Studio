@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Selling Studio - Dual Layer Build</title>
+    <title>The Dollhouse Brand Studio</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script type="module">
         import { bootstrapCameraKit, createMediaStreamSource, Transform2D } from "@snap/camera-kit";
@@ -48,10 +48,10 @@
             justify-content: flex-start;
         }
         .tt-panel {
-            background: linear-gradient(180deg, rgba(24, 24, 27, 0.94), rgba(8, 8, 10, 0.96));
+            background: linear-gradient(180deg, rgba(20, 20, 23, 0.96), rgba(8, 8, 10, 0.98));
             border: 1px solid var(--tt-border);
-            border-radius: 16px;
-            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.26);
+            border-radius: 12px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
         }
         .tt-label {
             color: var(--tt-cyan);
@@ -91,6 +91,64 @@
             background: rgba(254, 44, 85, 0.12);
             color: #ff8aa2;
         }
+        .studio-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            margin: -1.5rem -1.5rem 0;
+            padding: 1.25rem 1.5rem 1rem;
+            background: linear-gradient(180deg, rgba(5, 5, 5, 0.98), rgba(5, 5, 5, 0.88));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(18px);
+        }
+        .panel-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .panel-title {
+            color: #f4f4f5;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+        .panel-subtitle {
+            margin-top: 0.2rem;
+            color: #71717a;
+            font-size: 10px;
+            line-height: 1.35;
+        }
+        .status-box {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.56);
+            border-radius: 10px;
+            padding: 0.55rem 0.7rem;
+            color: #a1a1aa;
+            font-size: 10px;
+            line-height: 1.45;
+        }
+        .ops-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+        .ops-grid .tt-button {
+            min-height: 2.35rem;
+            padding: 0.45rem 0.6rem;
+        }
+        .danger-soft {
+            border-color: rgba(254, 44, 85, 0.45);
+            background: rgba(254, 44, 85, 0.08);
+            color: #ff9aae;
+        }
+        .hint-text {
+            color: #71717a;
+            font-size: 10px;
+            line-height: 1.45;
+        }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0b0b0c; }
         ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
@@ -101,11 +159,11 @@
 
     <div class="flex-1 h-full flex flex-col items-center justify-center bg-[#121214] p-6 border-r border-[#27272a]">
         <div class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full bg-[#fe2c55] animate-pulse"></span> 9:16 TikTok Live Preview (Slides Background + Floating Camera Box)
+            <span class="h-2 w-2 rounded-full bg-[#fe2c55] animate-pulse"></span> The Dollhouse Brand Studio
         </div>
         <div class="mb-3 flex flex-wrap items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider">
-            <span id="feedStatusBadge" class="rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400">FEED: RAW WEBCAM</span>
-            <span id="environmentStatusBadge" class="rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400">ENVIRONMENT: CHECKING</span>
+            <span id="feedStatusBadge" class="rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400">Camera: Raw</span>
+            <span id="environmentStatusBadge" class="rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400">Preview: Checking</span>
         </div>
 
         <div class="relative shadow-2xl border border-zinc-800 rounded-2xl overflow-hidden bg-black flex" style="height: 82vh; aspect-ratio: 9/16;">
@@ -119,32 +177,66 @@
 
     <div class="w-[440px] h-full bg-[#0b0b0c] flex flex-col justify-between border-l border-zinc-900">
 
-        <div class="flex-1 overflow-y-auto p-6 space-y-5">
-            <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+            <div class="studio-header flex items-start justify-between gap-3">
                 <div>
-                    <h1 class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-[#25f4ee] via-zinc-100 to-[#fe2c55] bg-clip-text text-transparent">TikTok Live Studio</h1>
-                    <p class="text-xs text-zinc-500">Live Commerce Control Room</p>
+                    <h1 class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-[#25f4ee] via-zinc-100 to-[#fe2c55] bg-clip-text text-transparent">The Dollhouse Brand Studio</h1>
+                    <p class="text-xs text-zinc-500">Digital Product Live Studio</p>
+                    <p id="buildVersionLabel" class="mt-1 text-[10px] font-bold uppercase tracking-wider text-zinc-600">Build: checking</p>
                 </div>
                 <button onclick="resetStudioEngine()" class="shrink-0 tt-button-danger px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider hover:bg-red-950/40 rounded-full transition">⚠️ RESET STUDIO ENGINE</button>
             </div>
 
+            <div id="fileModeWarning" class="hidden rounded-xl border border-red-500/60 bg-red-950/25 px-4 py-3 text-xs font-bold leading-relaxed text-red-100">
+                File mode warning: Snap filters, camera permissions, saved settings, and Vercel parity need localhost or HTTPS. Open http://localhost:8080/ or your Vercel URL.
+            </div>
+
             <hr class="border-zinc-900" />
 
+            <div class="tt-panel p-4">
+                <div class="panel-heading">
+                    <div>
+                        <div class="panel-title">Launch Control</div>
+                        <div class="panel-subtitle">Fast presets and final checks before you go live.</div>
+                    </div>
+                    <button onclick="runLiveCheck()" class="tt-button tt-button-primary px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider">Run Live Check</button>
+                </div>
+                <div id="liveCheckStatus" class="status-box uppercase tracking-wider">Run check before going live</div>
+                <div class="ops-grid mt-3">
+                    <button onclick="applyStudioPreset('faceless')" class="tt-button py-2 rounded-lg text-xs font-bold">Faceless Slides</button>
+                    <button onclick="applyStudioPreset('faceSlides')" class="tt-button py-2 rounded-lg text-xs font-bold">Face + Slides</button>
+                    <button onclick="applyStudioPreset('fullCamera')" class="tt-button py-2 rounded-lg text-xs font-bold">Full Camera</button>
+                    <button onclick="applyStudioPreset('launch')" class="tt-button py-2 rounded-lg text-xs font-bold">Launch Mode</button>
+                    <button onclick="applyStudioPreset('break')" class="tt-button py-2 rounded-lg text-xs font-bold">Break Mode</button>
+                    <button onclick="toggleSafeGuides()" id="btn-toggle-safe-guides" class="tt-button py-2 rounded-lg text-xs font-bold">Show Safe Guides</button>
+                </div>
+            </div>
+
             <div class="tt-panel p-4 space-y-3">
-                <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Screen Layout Target</label>
+                <div class="panel-heading">
+                    <div>
+                        <div class="panel-title">Stream Layout</div>
+                        <div class="panel-subtitle">Switch the actual output view and overlays.</div>
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="setViewMode('presentation')" id="btn-mode-pres" class="py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-100 text-zinc-900 transition">Presentation Mode</button>
                     <button onclick="setViewMode('camera')" id="btn-mode-cam" class="py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition">Full Camera Mode</button>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="toggleCameraPreviewLayer()" id="btn-toggle-camera-preview" class="tt-button py-2 rounded-lg text-xs font-bold transition">🎥 Hide Camera Box</button>
-                    <button onclick="toggleConversionFooter()" id="btn-toggle-footer" class="tt-button py-2 rounded-lg text-xs font-bold transition">🛒 Hide Buy Steps</button>
+                    <button onclick="toggleConversionFooter()" id="btn-toggle-footer" class="tt-button py-2 rounded-lg text-xs font-bold transition">🛒 Show Closing Steps</button>
                 </div>
-                <p class="text-[10px] text-zinc-500 leading-normal"><strong>Presentation Mode</strong> renders your uploaded slide graphics across the full frame with your filtered webcam running inside a clean, separate overlay box.</p>
+                <p class="hint-text"><strong>Presentation Mode</strong> renders slides with an optional floating camera box.</p>
             </div>
 
-            <div class="tt-panel p-4 space-y-2">
-                <label class="block text-[11px] uppercase font-bold tt-label tracking-wider">Snapchat Filter Camera Source</label>
+            <div class="tt-panel p-4 space-y-3">
+                <div class="panel-heading">
+                    <div>
+                        <div class="panel-title">Camera Source</div>
+                        <div class="panel-subtitle">Pick laptop, phone, Continuity, OBS, or virtual camera.</div>
+                    </div>
+                </div>
                 <select id="cameraSourceSelect" onchange="changeCameraSource(this.value)" class="w-full tt-input">
                     <option value="">Detecting camera sources...</option>
                 </select>
@@ -154,13 +246,19 @@
                         Waiting for camera permission
                     </div>
                 </div>
-                <button onclick="loadCameraDevices()" class="w-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold py-1.5 rounded-lg transition">Refresh Camera List</button>
-                <p class="text-[10px] text-zinc-500 leading-normal">Select Auto Front/Selfie Camera for phone use, or choose your iPhone/Continuity/virtual camera directly after refreshing the list.</p>
+                <button onclick="loadCameraDevices()" class="w-full tt-button py-2 text-xs font-bold">Refresh Camera List</button>
+                <div id="cameraDiagnosticsList" class="status-box">
+                    Detected cameras will appear here after refresh.
+                </div>
+                <p class="hint-text">Use phone/Continuity directly when Chrome exposes it. Auto front is best on mobile browsers.</p>
             </div>
 
             <div class="tt-panel p-4 space-y-3">
-                <div class="flex items-center justify-between gap-3">
-                    <label class="block text-[11px] uppercase font-bold tt-label tracking-wider">Snapchat Lenses & API Integration</label>
+                <div class="panel-heading">
+                    <div>
+                        <div class="panel-title">Snapchat Filters</div>
+                        <div class="panel-subtitle">Load web-ready lenses from your Snap group.</div>
+                    </div>
                     <label class="inline-flex items-center gap-2 text-[10px] uppercase font-bold tracking-wider text-zinc-400">
                         <input id="snapFilterToggle" type="checkbox" onchange="toggleSnapFilters(this.checked)" class="h-4 w-4 accent-cyan-400">
                         <span>Filters ON</span>
@@ -169,6 +267,13 @@
 
                 <input type="password" id="snapApiToken" autocomplete="off" placeholder="API Token / App ID" oninput="saveSnapCredentials()" class="w-full tt-input">
                 <input type="password" id="snapLensGroupId" autocomplete="off" placeholder="Demo Lens Group ID" oninput="saveSnapCredentials()" class="w-full tt-input">
+                <select id="snapTokenMode" onchange="updateSnapTokenModeHint()" class="w-full tt-input">
+                    <option value="staging">Staging Token - Localhost</option>
+                    <option value="production">Production Token - Vercel</option>
+                </select>
+                <div id="snapTokenModeHint" class="status-box uppercase tracking-wider">
+                    Staging mode: use this on localhost only.
+                </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="loadLensGroup()" class="tt-button py-2 px-3 rounded-lg text-xs font-bold transition">Load Available Lenses</button>
                     <button onclick="applySelectedLens()" class="tt-button tt-button-primary py-2 px-3 rounded-lg text-xs font-extrabold transition">Apply Selected Lens</button>
@@ -176,16 +281,16 @@
                 <select id="snapLensSelect" class="w-full tt-input">
                     <option value="">Load a lens group first</option>
                 </select>
-                <div id="snapStatus" class="rounded-lg border border-zinc-900 bg-black px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
+                <div id="snapStatus" class="status-box uppercase tracking-wider">
                     Camera Kit idle
                 </div>
-                <div id="snapOriginHint" class="rounded-lg border border-zinc-900 bg-black/60 px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
+                <div id="snapOriginHint" class="status-box uppercase tracking-wider">
                     Snap origin: checking
                 </div>
-                <div class="rounded-lg border border-cyan-400/20 bg-cyan-950/10 px-3 py-2 text-[10px] leading-relaxed text-cyan-100/80">
+                <div class="status-box border-cyan-400/20 bg-cyan-950/10 text-cyan-100/80">
                     Snap checklist: localhost uses your Staging token. Vercel uses your Production token. Add the exact Vercel HTTPS domain and http://localhost:8080 in the Snap portal.
                 </div>
-                <button onclick="clearSnapCredentials()" class="w-full tt-button border-red-900/50 bg-red-950/10 py-2 text-xs font-bold uppercase tracking-wider text-red-200 hover:bg-red-950/25">
+                <button onclick="clearSnapCredentials()" class="w-full tt-button danger-soft py-2 text-xs font-bold uppercase tracking-wider hover:bg-red-950/25">
                     Clear Snap Credentials
                 </button>
                 <button id="nativeGlowButton" onclick="toggleNativeStudioGlow()" class="w-full rounded-full border border-amber-300/70 bg-amber-950/10 px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-amber-200 hover:bg-amber-950/25 transition">
@@ -193,17 +298,28 @@
                 </button>
             </div>
 
-            <button id="cameraPowerButton" onclick="toggleCameraHardware()" class="w-full tt-button border-zinc-700 bg-zinc-950 py-3 text-xs font-extrabold uppercase tracking-wider text-zinc-200 hover:bg-zinc-900">
-                📷 Turn Camera Off
-            </button>
+            <div class="tt-panel p-4 space-y-2">
+                <div class="panel-heading">
+                    <div>
+                        <div class="panel-title">Broadcast Safety</div>
+                        <div class="panel-subtitle">Fast recovery controls during a live session.</div>
+                    </div>
+                </div>
+                <button id="cameraPowerButton" onclick="toggleCameraHardware()" class="w-full tt-button border-zinc-700 bg-zinc-950 py-3 text-xs font-extrabold uppercase tracking-wider text-zinc-200 hover:bg-zinc-900">
+                    📷 Turn Camera Off
+                </button>
 
-            <button onclick="applyObsSafeLayout()" class="w-full tt-button tt-button-primary py-3 text-xs font-extrabold uppercase tracking-wider">
-                OBS Safe Layout
-            </button>
+                <button onclick="applyObsSafeLayout()" class="w-full tt-button tt-button-primary py-3 text-xs font-extrabold uppercase tracking-wider">
+                    OBS Safe Layout
+                </button>
+            </div>
 
             <div class="tt-panel p-4 space-y-4">
-                <div class="flex justify-between items-center">
-                    <label class="text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Master Teleprompter & Deck</label>
+                <div class="panel-heading">
+                    <div>
+                        <div class="panel-title">Teleprompter & Deck</div>
+                        <div class="panel-subtitle">Read tighter and keep slide notes synced.</div>
+                    </div>
                     <div class="flex gap-2">
                         <button onclick="switchPrompterMode('master')" id="btn-prompter-master" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-900 transition">Paste Script</button>
                         <button onclick="switchPrompterMode('slides')" id="btn-prompter-slides" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-zinc-800 text-zinc-400 transition">Slide Deck</button>
@@ -242,9 +358,14 @@
             </div>
 
             <div class="tt-panel p-4 space-y-3">
-                <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Conversion & Offer Details</label>
+                <div class="panel-heading">
+                    <div>
+                        <div class="panel-title">Digital Offer</div>
+                        <div class="panel-subtitle">Value stack, live price, link-in-bio CTA, and scarcity.</div>
+                    </div>
+                </div>
                 <div class="space-y-2">
-                    <input type="text" id="prodName" placeholder="Product Name (e.g., TikTok Live Offer Kit)" class="w-full tt-input">
+                    <input type="text" id="prodName" placeholder="Product Name (e.g., The Dollhouse Brand Kit)" class="w-full tt-input">
                     <div class="grid grid-cols-2 gap-2">
                         <input type="text" id="prodValue" placeholder="Value (e.g., $297)" class="w-full tt-input">
                         <input type="text" id="prodOriginalPrice" placeholder="Was Price (e.g., $197)" class="w-full tt-input">
@@ -291,7 +412,12 @@
             </div>
 
             <div id="overlaySettingsContainer" class="tt-panel p-4 space-y-3">
-                <label class="block text-[11px] uppercase font-bold tt-label tracking-wider">Your Separate Webcam Box Position</label>
+                <div class="panel-heading">
+                    <div>
+                        <div class="panel-title">Camera Box</div>
+                        <div class="panel-subtitle">Shape and place the floating presenter frame.</div>
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -365,7 +491,7 @@
         </div>
 
         <div class="p-4 bg-black border-t border-zinc-900 text-center text-[10px] text-zinc-600 font-mono tracking-wider uppercase">
-            TikTok Live Commerce Studio
+            The Dollhouse Brand Studio
         </div>
     </div>
 
@@ -404,6 +530,12 @@
         const voicePitch = document.getElementById('voicePitch');
         const voiceRateValue = document.getElementById('voiceRateValue');
         const voicePitchValue = document.getElementById('voicePitchValue');
+        const buildVersionLabel = document.getElementById('buildVersionLabel');
+        const fileModeWarning = document.getElementById('fileModeWarning');
+        const cameraDiagnosticsList = document.getElementById('cameraDiagnosticsList');
+        const liveCheckStatus = document.getElementById('liveCheckStatus');
+        const snapTokenMode = document.getElementById('snapTokenMode');
+        const snapTokenModeHint = document.getElementById('snapTokenModeHint');
 
         let viewMode = 'presentation';
         let currentShape = 'square';
@@ -411,7 +543,7 @@
         let prompterMode = 'master';
         let offerBannerVisible = true;
         let cameraPreviewVisible = true;
-        let conversionFooterVisible = true;
+        let conversionFooterVisible = false;
         let currentStream = null;
         let snapModule = null;
         let snapCameraKit = null;
@@ -423,6 +555,8 @@
         let activeSnapApiToken = '';
         let cameraHardwareEnabled = true;
         let nativeStudioGlowEnabled = false;
+        let safeGuidesVisible = false;
+        const appBuildVersion = '1cdba6a';
 
         let uploadedSlides = [];
         let activeSlideIndex = 0;
@@ -528,14 +662,14 @@
             const host = window.location.hostname;
             if (protocol === 'https:') return 'HTTPS';
             if (host === 'localhost' || host === '127.0.0.1') return 'LOCALHOST';
-            return 'FILE ERROR';
+            return 'FILE MODE';
         }
 
         function updateStatusBadges() {
             const snapActive = snapFiltersEnabled && snapOutputCanvas && cameraHardwareEnabled;
             feedStatusBadge.innerText = cameraHardwareEnabled
-                ? (snapActive ? 'FEED: SNAP FILTER ACTIVE' : 'FEED: RAW WEBCAM')
-                : 'FEED: CAMERA OFF';
+                ? (snapActive ? 'Camera: Snap Filter' : 'Camera: Raw')
+                : 'Camera: Off';
             feedStatusBadge.className = snapActive
                 ? 'rounded-full border border-cyan-400/70 bg-cyan-950/25 px-3 py-1 text-cyan-200'
                 : cameraHardwareEnabled
@@ -543,15 +677,32 @@
                     : 'rounded-full border border-red-800/70 bg-red-950/30 px-3 py-1 text-red-300';
 
             const environmentLabel = getEnvironmentLabel();
-            environmentStatusBadge.innerText = `ENVIRONMENT: ${environmentLabel}`;
-            environmentStatusBadge.className = environmentLabel === 'FILE ERROR'
-                ? 'rounded-full border border-red-800/70 bg-red-950/30 px-3 py-1 text-red-300'
+            environmentStatusBadge.innerText = environmentLabel === 'FILE MODE'
+                ? 'Open localhost for camera + filters'
+                : `Preview: ${environmentLabel}`;
+            environmentStatusBadge.className = environmentLabel === 'FILE MODE'
+                ? 'rounded-full border border-amber-500/60 bg-amber-950/20 px-3 py-1 text-amber-200'
                 : 'rounded-full border border-cyan-400/50 bg-cyan-950/20 px-3 py-1 text-cyan-300';
         }
 
         function updateSnapOriginHint() {
             const origin = window.location.origin === 'null' ? 'file:// is not supported' : window.location.origin;
             snapOriginHint.innerText = `Snap origin: ${origin}`;
+        }
+
+        function updateLaunchEnvironmentWarnings() {
+            buildVersionLabel.innerText = `Build: ${appBuildVersion}`;
+            const isFileMode = getEnvironmentLabel() === 'FILE MODE';
+            fileModeWarning.classList.toggle('hidden', !isFileMode);
+        }
+
+        function updateSnapTokenModeHint() {
+            const origin = window.location.origin === 'null' ? 'file:// URL' : window.location.origin;
+            if (snapTokenMode.value === 'production') {
+                snapTokenModeHint.innerText = `Production mode: use on your Vercel HTTPS domain only. Current origin: ${origin}`;
+            } else {
+                snapTokenModeHint.innerText = `Staging mode: use on localhost only. Current origin: ${origin}`;
+            }
         }
 
         function safeStorageGet(key) {
@@ -584,14 +735,18 @@
         function saveSnapCredentials() {
             const savedToken = safeStorageSet('liveSellingStudioSnapApiToken', document.getElementById('snapApiToken').value.trim());
             const savedGroup = safeStorageSet('liveSellingStudioSnapLensGroupId', document.getElementById('snapLensGroupId').value.trim());
+            safeStorageSet('liveSellingStudioSnapTokenMode', snapTokenMode.value);
             snapStatus.innerText = savedToken && savedGroup ? 'Snap credentials saved locally' : 'Open localhost to save Snap credentials';
         }
 
         function restoreSnapCredentials() {
             const savedToken = safeStorageGet('liveSellingStudioSnapApiToken');
             const savedGroupId = safeStorageGet('liveSellingStudioSnapLensGroupId');
+            const savedMode = safeStorageGet('liveSellingStudioSnapTokenMode');
             document.getElementById('snapApiToken').value = savedToken;
             document.getElementById('snapLensGroupId').value = savedGroupId;
+            if (savedMode) snapTokenMode.value = savedMode;
+            updateSnapTokenModeHint();
             if (savedToken || savedGroupId) {
                 snapStatus.innerText = 'Saved Snap credentials loaded';
             }
@@ -600,8 +755,11 @@
         function clearSnapCredentials() {
             safeStorageRemove('liveSellingStudioSnapApiToken');
             safeStorageRemove('liveSellingStudioSnapLensGroupId');
+            safeStorageRemove('liveSellingStudioSnapTokenMode');
             document.getElementById('snapApiToken').value = '';
             document.getElementById('snapLensGroupId').value = '';
+            snapTokenMode.value = 'staging';
+            updateSnapTokenModeHint();
             snapAvailableLenses = [];
             snapActiveLens = null;
             snapLensSelect.innerHTML = '<option value="">Load a lens group first</option>';
@@ -725,6 +883,7 @@
                 .filter(device => device.kind === 'videoinput')
                 .sort((a, b) => getCameraPriority(b) - getCameraPriority(a));
             const activeDeviceId = requestedDeviceId || '';
+            renderCameraDiagnostics(cameras);
 
             cameraSelect.innerHTML = '';
             if (!cameras.length) {
@@ -753,6 +912,30 @@
             if (activeDeviceId) {
                 cameraSelect.value = activeDeviceId;
             }
+        }
+
+        function renderCameraDiagnostics(cameras) {
+            if (!cameras.length) {
+                cameraDiagnosticsList.innerText = 'No camera labels detected yet. Allow camera permission, then refresh.';
+                return;
+            }
+            cameraDiagnosticsList.innerHTML = cameras
+                .map((camera, index) => {
+                    const label = escapeHtml(camera.label || `Camera ${index + 1} - label hidden until permission`);
+                    const priority = getCameraPriority(camera);
+                    const tag = priority >= 4 ? 'PHONE' : priority === 3 ? 'FRONT' : priority === 2 ? 'VIRTUAL' : 'CAMERA';
+                    return `<div class="flex items-start justify-between gap-2 border-b border-zinc-900/80 py-1 last:border-b-0"><span>${index + 1}. ${label}</span><span class="text-cyan-300">${tag}</span></div>`;
+                })
+                .join('');
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
         }
 
         async function findPreferredPhoneCameraId() {
@@ -817,7 +1000,7 @@
                 snapStatus.innerText = `Camera Kit package bridge failed: ${window.SnapCameraKitBridgeError}`;
             }
 
-            if (getEnvironmentLabel() !== 'FILE ERROR') {
+            if (getEnvironmentLabel() !== 'FILE MODE') {
                 try {
                     snapStatus.innerText = 'Waiting for Camera Kit package';
                     await waitForSnapBridge();
@@ -981,7 +1164,7 @@
                 return;
             }
 
-            if (getEnvironmentLabel() === 'FILE ERROR') {
+            if (getEnvironmentLabel() === 'FILE MODE') {
                 snapStatus.innerText = 'Use localhost - Camera Kit blocks file URLs';
                 snapLensSelect.innerHTML = '<option value="">Open localhost URL first</option>';
                 await fallbackToRawCamera('Camera Kit requires localhost or HTTPS; file URL blocked.');
@@ -1088,6 +1271,8 @@
         updateOfferVisibilityButton();
         updateStatusBadges();
         updateSnapOriginHint();
+        updateLaunchEnvironmentWarnings();
+        updateSnapTokenModeHint();
         restoreSnapCredentials();
         updateNativeGlowButton();
         initializeVoiceProfiles();
@@ -1173,6 +1358,10 @@
 
             if (conversionFooterVisible) {
                 renderConversionFooter();
+            }
+
+            if (safeGuidesVisible) {
+                renderTikTokSafeGuides();
             }
             requestAnimationFrame(renderLoop);
         }
@@ -1293,20 +1482,20 @@
         function renderStageIntro() {
             renderCenteredStageMessage(
                 "READY TO LIVE LAUNCH",
-                "Upload slides below to fill this TikTok live stage"
+                "Upload slides below to fill this Dollhouse live stage"
             );
         }
 
         function renderConversionFooter() {
-            const margin = 42;
-            const footerHeight = 118;
-            const footerY = canvas.height - footerHeight - 28;
+            const margin = 64;
+            const footerHeight = 108;
+            const footerY = 720;
             const footerWidth = canvas.width - margin * 2;
-            const footerText = 'STEP 1: TAP PROFILE PIC  •  STEP 2: CLICK LINK IN BIO  •  STEP 3: SECURE SPECIAL OFFER BEFORE TIMER HITS 0';
+            const footerText = 'FINAL STEP: TAP PROFILE PIC  •  CLICK LINK IN BIO  •  LOCK IN YOUR DIGITAL OFFER NOW';
 
             ctx.save();
             ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-            ctx.strokeStyle = 'rgba(37, 244, 238, 0.24)';
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.34)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.roundRect(margin, footerY, footerWidth, footerHeight, 24);
@@ -1323,8 +1512,39 @@
 
             ctx.textAlign = 'center';
             ctx.fillStyle = '#F4F4F5';
-            setFittedFont(footerText, '850', 27, 'system-ui', footerWidth - 44, 17);
-            ctx.fillText(footerText, canvas.width / 2, footerY + 70);
+            setFittedFont(footerText, '850', 25, 'system-ui', footerWidth - 54, 17);
+            ctx.fillText(footerText, canvas.width / 2, footerY + 66);
+            ctx.restore();
+        }
+
+        function renderTikTokSafeGuides() {
+            ctx.save();
+            ctx.setLineDash([18, 14]);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(37, 244, 238, 0.72)';
+            ctx.fillStyle = 'rgba(37, 244, 238, 0.06)';
+            ctx.strokeRect(42, 150, canvas.width - 84, canvas.height - 520);
+            ctx.fillRect(42, 150, canvas.width - 84, canvas.height - 520);
+
+            ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(254, 44, 85, 0.10)';
+            ctx.strokeStyle = 'rgba(254, 44, 85, 0.72)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(36, 36, canvas.width - 72, 126, 20);
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.roundRect(36, canvas.height - 420, canvas.width - 72, 360, 24);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.textAlign = 'center';
+            ctx.font = '900 24px system-ui';
+            ctx.fillStyle = '#25f4ee';
+            ctx.fillText('SAFE TITLE / OFFER AREA', canvas.width / 2, 220);
+            ctx.fillStyle = '#ff8aa2';
+            ctx.fillText('AVOID CHAT + NATIVE BUTTONS', canvas.width / 2, canvas.height - 236);
             ctx.restore();
         }
 
@@ -1333,7 +1553,7 @@
             ctx.textAlign = 'center';
             ctx.fillStyle = '#25f4ee';
             ctx.font = '700 18px ui-monospace, SFMono-Regular, Menlo, monospace';
-            ctx.fillText('TIKTOK LIVE COMMERCE STUDIO', canvas.width / 2, canvas.height / 2 - 88);
+            ctx.fillText('THE DOLLHOUSE BRAND STUDIO', canvas.width / 2, canvas.height / 2 - 88);
             ctx.fillStyle = '#f4f4f5';
             ctx.font = '800 34px system-ui';
             ctx.fillText(title, canvas.width / 2, canvas.height / 2 - 22);
@@ -1451,33 +1671,32 @@
         function renderProductBanner() {
             const margin = Math.max(46, canvas.width * 0.046);
             const bannerWidth = canvas.width - (margin * 2);
-            const bannerHeight = 302;
+            const bannerHeight = 286;
             const topY = 180;
             const radius = 28;
             const leftX = margin + 45;
             const rightX = canvas.width - margin - 45;
-            const splitX = margin + bannerWidth * 0.60;
-            const leftMax = splitX - leftX - 42;
+            const splitX = margin + bannerWidth * 0.64;
+            const leftMax = splitX - leftX - 34;
             const rightMax = rightX - splitX - 26;
-            const titleY = topY + 70;
-            const valueY = topY + 124;
+            const titleY = topY + 78;
+            const valueY = topY + 126;
             const originalPriceY = topY + 166;
-            const offerY = topY + 246;
-            const ctaLabelY = topY + 68;
-            const ctaPillY = topY + 88;
-            const timerLabelY = topY + 166;
-            const stockY = topY + 218;
+            const offerY = topY + 232;
+            const ctaY = topY + 102;
+            const timerLabelY = topY + 154;
+            const stockY = topY + 208;
 
             ctx.save();
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.44)';
-            ctx.shadowBlur = 28;
-            ctx.shadowOffsetY = 14;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.52)';
+            ctx.shadowBlur = 34;
+            ctx.shadowOffsetY = 16;
             const cardFill = ctx.createLinearGradient(margin, topY, margin + bannerWidth, topY + bannerHeight);
-            cardFill.addColorStop(0, '#070708');
-            cardFill.addColorStop(0.56, '#0A0A0C');
-            cardFill.addColorStop(1, '#111113');
+            cardFill.addColorStop(0, '#060607');
+            cardFill.addColorStop(0.58, '#0A0A0C');
+            cardFill.addColorStop(1, '#121214');
             ctx.fillStyle = cardFill;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+            ctx.strokeStyle = 'rgba(212, 163, 89, 0.34)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.roundRect(margin, topY, bannerWidth, bannerHeight, radius);
@@ -1494,29 +1713,37 @@
             ctx.roundRect(margin + 2, topY + 2, bannerWidth - 4, bannerHeight - 4, radius - 2);
             ctx.fill();
 
-            ctx.strokeStyle = 'rgba(37, 244, 238, 0.34)';
-            ctx.lineWidth = 2;
+            const accentLine = ctx.createLinearGradient(margin + radius, topY, margin + bannerWidth - radius, topY);
+            accentLine.addColorStop(0, 'rgba(37, 244, 238, 0.72)');
+            accentLine.addColorStop(0.5, 'rgba(212, 163, 89, 0.42)');
+            accentLine.addColorStop(1, 'rgba(254, 44, 85, 0.58)');
+            ctx.strokeStyle = accentLine;
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(margin + radius, topY + 1);
             ctx.lineTo(margin + bannerWidth - radius, topY + 1);
             ctx.stroke();
 
             ctx.textAlign = 'left';
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.88)';
+            ctx.font = '800 16px ui-monospace, SFMono-Regular, Menlo, monospace';
+            ctx.fillText('DIGITAL PRODUCT DROP', leftX, topY + 42);
+
             ctx.fillStyle = '#ffffff';
             const rawTitleText = activeProduct.name.toUpperCase();
             const titleText = rawTitleText.length > 20 ? `${rawTitleText.slice(0, 20)}...` : rawTitleText;
-            setFittedFont(titleText, '900', 41, 'system-ui', leftMax, 26);
+            setFittedFont(titleText, '900', 38, 'system-ui', leftMax, 26);
             ctx.fillText(titleText, leftX, titleY);
 
             const valueText = `VALUE: ${activeProduct.value || '$297'}`.toUpperCase();
-            ctx.fillStyle = '#F4F4F5';
-            setFittedFont(valueText, '800', 24, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 16);
+            ctx.fillStyle = '#d4d4d8';
+            setFittedFont(valueText, '800', 22, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 16);
             ctx.fillText(valueText, leftX, valueY);
 
             const originalPrice = activeProduct.originalPrice || activeProduct.value || '$197';
             const originalPriceText = `WAS ${originalPrice}`.toUpperCase();
             ctx.fillStyle = '#a1a1aa';
-            setFittedFont(originalPriceText, '700', 27, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 18);
+            setFittedFont(originalPriceText, '700', 23, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 18);
             ctx.fillText(originalPriceText, leftX, originalPriceY);
 
             const originalMetrics = ctx.measureText(originalPriceText);
@@ -1528,19 +1755,19 @@
             ctx.stroke();
 
             const liveOffer = activeProduct.price || 'LIVE OFFER';
-            const badgeText = "INSTANT DIGITAL ACCESS";
-            const badgeWidth = 314;
-            const badgeHeight = 48;
-            const priceMax = Math.max(150, leftMax - badgeWidth - 40);
+            const badgeText = "LIVE SPECIAL";
+            const badgeWidth = 188;
+            const badgeHeight = 44;
+            const priceMax = Math.max(170, leftMax - badgeWidth - 34);
             ctx.fillStyle = '#34D399';
-            setFittedFont(liveOffer, '900', 60, 'system-ui', priceMax, 36);
+            setFittedFont(liveOffer, '950', 62, 'system-ui', priceMax, 38);
             ctx.fillText(liveOffer, leftX, offerY);
 
             const liveMetrics = ctx.measureText(liveOffer);
-            const badgeX = Math.min(leftX + liveMetrics.width + 34, splitX - badgeWidth - 20);
-            const badgeY = offerY - 42;
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.10)';
-            ctx.strokeStyle = 'rgba(251, 191, 36, 0.72)';
+            const badgeX = Math.min(leftX + liveMetrics.width + 28, splitX - badgeWidth - 18);
+            const badgeY = offerY - 39;
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.12)';
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.64)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
@@ -1548,57 +1775,55 @@
             ctx.stroke();
 
             ctx.fillStyle = '#FBBF24';
-            ctx.font = '800 18px ui-monospace, SFMono-Regular, Menlo, monospace';
+            ctx.font = '850 17px ui-monospace, SFMono-Regular, Menlo, monospace';
             ctx.textAlign = 'center';
-            ctx.fillText(badgeText, badgeX + badgeWidth / 2, badgeY + 30);
-
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(splitX, topY + 52);
-            ctx.lineTo(splitX, topY + bannerHeight - 52);
-            ctx.stroke();
+            ctx.fillText(badgeText, badgeX + badgeWidth / 2, badgeY + 28);
 
             ctx.textAlign = 'right';
             const ctaText = (activeProduct.cta || 'LINK IN BIO').toUpperCase();
-            ctx.fillStyle = '#a1a1aa';
-            setFittedFont('GET INSTANT ACCESS', '850', 17, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
-            ctx.fillText('GET INSTANT ACCESS', rightX, ctaLabelY);
-
-            const pillWidth = Math.min(rightMax, 304);
-            const pillHeight = 58;
-            const pillX = rightX - pillWidth;
-            const pillGradient = ctx.createLinearGradient(pillX, ctaPillY, rightX, ctaPillY + pillHeight);
-            pillGradient.addColorStop(0, '#25F4EE');
-            pillGradient.addColorStop(1, '#34D399');
-            ctx.fillStyle = pillGradient;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.roundRect(pillX, ctaPillY, pillWidth, pillHeight, pillHeight / 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = '#050505';
             const safeCtaText = ctaText.length > 22 ? `${ctaText.slice(0, 22)}...` : ctaText;
-            setFittedFont(safeCtaText, '950', 29, 'system-ui', pillWidth - 34, 16);
-            ctx.textAlign = 'center';
-            ctx.fillText(safeCtaText, pillX + pillWidth / 2, ctaPillY + 38);
+            ctx.fillStyle = '#ffffff';
+            setFittedFont(safeCtaText, '950', 34, 'system-ui', rightMax, 20);
+            ctx.fillText(safeCtaText, rightX, ctaY);
+
+            const ctaMetrics = ctx.measureText(safeCtaText);
+            const underlineWidth = Math.min(ctaMetrics.width, rightMax);
+            const underlineGradient = ctx.createLinearGradient(rightX - underlineWidth, ctaY + 13, rightX, ctaY + 13);
+            underlineGradient.addColorStop(0, 'rgba(37, 244, 238, 0.15)');
+            underlineGradient.addColorStop(1, 'rgba(52, 211, 153, 0.95)');
+            ctx.strokeStyle = underlineGradient;
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(rightX - underlineWidth, ctaY + 13);
+            ctx.lineTo(rightX, ctaY + 13);
+            ctx.stroke();
             ctx.textAlign = 'right';
 
-            const expireText = 'SPECIAL EXPIRES WHEN TIMER HITS ZERO';
+            const expireText = 'BONUS EXPIRES WHEN TIMER HITS ZERO';
             ctx.fillStyle = '#FBBF24';
-            setFittedFont(expireText, '800', 22, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 14);
+            setFittedFont(expireText, '800', 20, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 14);
             ctx.fillText(expireText, rightX, timerLabelY);
 
-            const stockText = `⚠ ONLY ${activeProduct.stock} DIGITAL SPOTS LEFT`;
+            const stockText = `ONLY ${activeProduct.stock} SPOTS LEFT`;
+            const stockMetricsFont = setFittedFont(stockText, '900', 25, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax - 34, 16);
+            ctx.font = `900 ${stockMetricsFont}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+            const stockWidth = Math.min(ctx.measureText(stockText).width + 42, rightMax);
+            const stockX = rightX - stockWidth;
+            const stockPillY = stockY - 31;
+            ctx.fillStyle = 'rgba(244, 63, 94, 0.13)';
+            ctx.strokeStyle = 'rgba(244, 63, 94, 0.46)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(stockX, stockPillY, stockWidth, 44, 22);
+            ctx.fill();
+            ctx.stroke();
             ctx.fillStyle = '#F43F5E';
-            setFittedFont(stockText, '900', 28, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 18);
-            ctx.fillText(stockText, rightX, stockY);
+            ctx.fillText(stockText, rightX - 20, stockY);
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.58)';
-            setFittedFont('DOWNLOAD ACCESS DELIVERED AFTER CHECKOUT', '700', 15, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
-            ctx.fillText('DOWNLOAD ACCESS DELIVERED AFTER CHECKOUT', rightX, topY + 264);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.62)';
+            setFittedFont('INSTANT DOWNLOAD AFTER CHECKOUT', '750', 15, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
+            ctx.fillText('INSTANT DOWNLOAD AFTER CHECKOUT', rightX, topY + 252);
         }
 
         function renderLiveTimer() {
@@ -1798,7 +2023,7 @@
 
         function updateConversionFooterButton() {
             const btn = document.getElementById('btn-toggle-footer');
-            btn.innerText = conversionFooterVisible ? '🛒 Hide Buy Steps' : '🛒 Show Buy Steps';
+            btn.innerText = conversionFooterVisible ? '🛒 Hide Closing Steps' : '🛒 Show Closing Steps';
         }
 
         function toggleConversionFooter() {
@@ -1810,7 +2035,7 @@
             setViewMode('presentation');
             offerBannerVisible = true;
             cameraPreviewVisible = false;
-            conversionFooterVisible = true;
+            conversionFooterVisible = false;
             overlayConfig.size = 420;
             overlayConfig.x = 540;
             overlayConfig.y = getOverlayMaxY();
@@ -1818,7 +2043,71 @@
             updateCameraPreviewButton();
             updateConversionFooterButton();
             syncOverlayControls();
-            snapStatus.innerText = 'OBS safe layout ready: slides, offer, and buy steps visible';
+            snapStatus.innerText = 'OBS safe layout ready: closing steps hidden until needed';
+        }
+
+        function applyStudioPreset(preset) {
+            if (preset === 'faceless') {
+                setViewMode('presentation');
+                cameraPreviewVisible = false;
+                offerBannerVisible = true;
+                conversionFooterVisible = false;
+            } else if (preset === 'faceSlides') {
+                setViewMode('presentation');
+                cameraPreviewVisible = true;
+                offerBannerVisible = true;
+                conversionFooterVisible = false;
+                applyPositionPreset('bottom');
+            } else if (preset === 'fullCamera') {
+                setViewMode('camera');
+                cameraPreviewVisible = true;
+                offerBannerVisible = false;
+                conversionFooterVisible = false;
+            } else if (preset === 'launch') {
+                setViewMode('presentation');
+                cameraPreviewVisible = true;
+                offerBannerVisible = true;
+                conversionFooterVisible = false;
+                applyPositionPreset('top');
+            } else if (preset === 'break') {
+                setViewMode('presentation');
+                cameraPreviewVisible = false;
+                offerBannerVisible = false;
+                conversionFooterVisible = true;
+                stopCountdown();
+            }
+            updateOfferVisibilityButton();
+            updateCameraPreviewButton();
+            updateConversionFooterButton();
+            liveCheckStatus.innerText = `Preset applied: ${preset}`;
+        }
+
+        function toggleSafeGuides() {
+            safeGuidesVisible = !safeGuidesVisible;
+            document.getElementById('btn-toggle-safe-guides').innerText = safeGuidesVisible ? 'Hide Safe Guides' : 'Show Safe Guides';
+        }
+
+        function runLiveCheck() {
+            const checks = [];
+            const environmentOk = getEnvironmentLabel() !== 'FILE MODE';
+            const cameraOk = cameraHardwareEnabled && video.readyState >= 2 && video.videoWidth > 0;
+            const slidesOk = uploadedSlides.length > 0;
+            const productOk = !!activeProduct;
+            const timerOk = countdownTimeRemaining > 0;
+            const snapFieldsOk = !!document.getElementById('snapApiToken').value.trim() && !!document.getElementById('snapLensGroupId').value.trim();
+
+            checks.push(`${environmentOk ? 'OK' : 'FIX'} ENV`);
+            checks.push(`${cameraOk ? 'OK' : 'FIX'} CAMERA`);
+            checks.push(`${slidesOk ? 'OK' : 'ADD'} SLIDES`);
+            checks.push(`${productOk ? 'OK' : 'PIN'} OFFER`);
+            checks.push(`${timerOk ? 'OK' : 'READY'} TIMER`);
+            checks.push(`${snapFieldsOk ? 'OK' : 'OPTIONAL'} SNAP`);
+
+            const ready = environmentOk && cameraOk && productOk;
+            liveCheckStatus.innerText = `${ready ? 'LIVE READY' : 'CHECK SETUP'} - ${checks.join(' / ')}`;
+            liveCheckStatus.className = ready
+                ? 'rounded-lg border border-emerald-500/40 bg-emerald-950/20 px-3 py-2 text-[10px] uppercase tracking-wider text-emerald-200'
+                : 'rounded-lg border border-amber-500/40 bg-amber-950/20 px-3 py-2 text-[10px] uppercase tracking-wider text-amber-200';
         }
 
         function clearProduct() {
@@ -1830,7 +2119,7 @@
             activeProduct = null;
             offerBannerVisible = true;
             cameraPreviewVisible = true;
-            conversionFooterVisible = true;
+            conversionFooterVisible = false;
             updateOfferVisibilityButton();
             updateCameraPreviewButton();
             updateConversionFooterButton();
@@ -1881,19 +2170,30 @@
             clearInterval(countdownTimerInterval);
             const mins = parseInt(document.getElementById('timerDuration').value) || 5;
             countdownTimeRemaining = mins * 60;
+            conversionFooterVisible = false;
+            updateConversionFooterButton();
 
             countdownTimerInterval = setInterval(() => {
                 if(countdownTimeRemaining > 0) {
                     countdownTimeRemaining--;
-                } else {
+                    if (countdownTimeRemaining > 0) return;
+                }
+
+                if (countdownTimeRemaining === 0) {
                     clearInterval(countdownTimerInterval);
+                    countdownTimerInterval = null;
+                    conversionFooterVisible = true;
+                    updateConversionFooterButton();
                 }
             }, 1000);
         }
 
         function stopCountdown() {
             clearInterval(countdownTimerInterval);
+            countdownTimerInterval = null;
             countdownTimeRemaining = 0;
+            conversionFooterVisible = false;
+            updateConversionFooterButton();
         }
 
         function setViewMode(mode) {
