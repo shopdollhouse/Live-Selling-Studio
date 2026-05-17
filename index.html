@@ -7,9 +7,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script type="module" src="https://unpkg.com/@snap/camera-kit/dist/index.js"></script>
     <style>
-        body { background-color: #0b0b0c; color: #f4f4f5; font-family: system-ui, sans-serif; }
+        :root {
+            --tt-bg: #050505;
+            --tt-panel: #111113;
+            --tt-panel-soft: #18181b;
+            --tt-border: rgba(255, 255, 255, 0.09);
+            --tt-text: #f8fafc;
+            --tt-muted: #a1a1aa;
+            --tt-cyan: #25f4ee;
+            --tt-red: #fe2c55;
+            --tt-pink: #ff3b8a;
+        }
+        body {
+            background-color: var(--tt-bg);
+            color: var(--tt-text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
         .teleprompter-text {
-            font-family: Georgia, serif;
+            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
             font-size: 1.08rem;
             line-height: 1.78;
             max-width: 280px;
@@ -18,6 +33,50 @@
             text-align: center;
             align-items: flex-start;
             justify-content: flex-start;
+        }
+        .tt-panel {
+            background: linear-gradient(180deg, rgba(24, 24, 27, 0.94), rgba(8, 8, 10, 0.96));
+            border: 1px solid var(--tt-border);
+            border-radius: 16px;
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.26);
+        }
+        .tt-label {
+            color: var(--tt-cyan);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-size: 11px;
+            font-weight: 850;
+        }
+        .tt-input {
+            width: 100%;
+            background: #0c0c0e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0.6rem 0.75rem;
+            color: #f4f4f5;
+            font-size: 12px;
+            outline: none;
+        }
+        .tt-input:focus { border-color: rgba(37, 244, 238, 0.72); }
+        .tt-button {
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: #16161a;
+            color: #f4f4f5;
+            font-size: 12px;
+            font-weight: 800;
+            transition: 160ms ease;
+        }
+        .tt-button:hover { background: #232329; }
+        .tt-button-primary {
+            border-color: rgba(37, 244, 238, 0.8);
+            background: linear-gradient(90deg, #25f4ee 0%, #fe2c55 100%);
+            color: #050505;
+        }
+        .tt-button-danger {
+            border-color: rgba(254, 44, 85, 0.65);
+            background: rgba(254, 44, 85, 0.12);
+            color: #ff8aa2;
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0b0b0c; }
@@ -29,7 +88,7 @@
 
     <div class="flex-1 h-full flex flex-col items-center justify-center bg-[#121214] p-6 border-r border-[#27272a]">
         <div class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span> 9:16 Live Stream Monitor (Slides Background + Floating Camera Box)
+            <span class="h-2 w-2 rounded-full bg-[#fe2c55] animate-pulse"></span> 9:16 TikTok Live Preview (Slides Background + Floating Camera Box)
         </div>
         <div class="mb-3 flex flex-wrap items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider">
             <span id="feedStatusBadge" class="rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400">FEED: RAW WEBCAM</span>
@@ -50,15 +109,15 @@
         <div class="flex-1 overflow-y-auto p-6 space-y-5">
             <div class="flex items-start justify-between gap-3">
                 <div>
-                    <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">Live Layout Studio</h1>
-                    <p class="text-xs text-zinc-500">Dual-Layer Presentation Engine</p>
+                    <h1 class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-[#25f4ee] via-zinc-100 to-[#fe2c55] bg-clip-text text-transparent">TikTok Live Studio</h1>
+                    <p class="text-xs text-zinc-500">Live Commerce Control Room</p>
                 </div>
-                <button onclick="resetStudioEngine()" class="shrink-0 border border-red-900/70 bg-red-950/20 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-red-300 hover:bg-red-950/40 rounded-lg transition">⚠️ RESET STUDIO ENGINE</button>
+                <button onclick="resetStudioEngine()" class="shrink-0 tt-button-danger px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider hover:bg-red-950/40 rounded-full transition">⚠️ RESET STUDIO ENGINE</button>
             </div>
 
             <hr class="border-zinc-900" />
 
-            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+            <div class="tt-panel p-4 space-y-3">
                 <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Screen Layout Target</label>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="setViewMode('presentation')" id="btn-mode-pres" class="py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-100 text-zinc-900 transition">Presentation Mode</button>
@@ -67,9 +126,9 @@
                 <p class="text-[10px] text-zinc-500 leading-normal"><strong>Presentation Mode</strong> renders your uploaded slide graphics across the full frame with your filtered webcam running inside a clean, separate overlay box.</p>
             </div>
 
-            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-2">
-                <label class="block text-[11px] uppercase font-bold text-amber-400 tracking-wider">Snapchat Filter Camera Source</label>
-                <select id="cameraSourceSelect" onchange="changeCameraSource(this.value)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+            <div class="tt-panel p-4 space-y-2">
+                <label class="block text-[11px] uppercase font-bold tt-label tracking-wider">Snapchat Filter Camera Source</label>
+                <select id="cameraSourceSelect" onchange="changeCameraSource(this.value)" class="w-full tt-input">
                     <option value="">Detecting camera sources...</option>
                 </select>
                 <div class="relative overflow-hidden rounded-lg border border-zinc-800 bg-black aspect-video">
@@ -82,22 +141,22 @@
                 <p class="text-[10px] text-zinc-500 leading-normal">Open Snapchat/Snap Camera/OBS Virtual Camera first, then select that virtual camera here to render filtered video into the live canvas.</p>
             </div>
 
-            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+            <div class="tt-panel p-4 space-y-3">
                 <div class="flex items-center justify-between gap-3">
-                    <label class="block text-[11px] uppercase font-bold text-amber-400 tracking-wider">Snapchat Lenses & API Integration</label>
+                    <label class="block text-[11px] uppercase font-bold tt-label tracking-wider">Snapchat Lenses & API Integration</label>
                     <label class="inline-flex items-center gap-2 text-[10px] uppercase font-bold tracking-wider text-zinc-400">
-                        <input id="snapFilterToggle" type="checkbox" onchange="toggleSnapFilters(this.checked)" class="h-4 w-4 accent-amber-500">
+                        <input id="snapFilterToggle" type="checkbox" onchange="toggleSnapFilters(this.checked)" class="h-4 w-4 accent-cyan-400">
                         <span>Filters ON</span>
                     </label>
                 </div>
 
-                <input type="password" id="snapApiToken" autocomplete="off" placeholder="API Token / App ID" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
-                <input type="password" id="snapLensGroupId" autocomplete="off" placeholder="Demo Lens Group ID" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                <input type="password" id="snapApiToken" autocomplete="off" placeholder="API Token / App ID" class="w-full tt-input">
+                <input type="password" id="snapLensGroupId" autocomplete="off" placeholder="Demo Lens Group ID" class="w-full tt-input">
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="loadLensGroup()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 py-2 px-3 rounded-lg text-xs font-bold transition">Load Available Lenses</button>
-                    <button onclick="applySelectedLens()" class="bg-amber-500 hover:bg-amber-400 text-zinc-950 border border-amber-300 py-2 px-3 rounded-lg text-xs font-extrabold transition">Apply Selected Lens</button>
+                    <button onclick="loadLensGroup()" class="tt-button py-2 px-3 rounded-lg text-xs font-bold transition">Load Available Lenses</button>
+                    <button onclick="applySelectedLens()" class="tt-button tt-button-primary py-2 px-3 rounded-lg text-xs font-extrabold transition">Apply Selected Lens</button>
                 </div>
-                <select id="snapLensSelect" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                <select id="snapLensSelect" class="w-full tt-input">
                     <option value="">Load a lens group first</option>
                 </select>
                 <div id="snapStatus" class="rounded-lg border border-zinc-900 bg-black px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
@@ -105,7 +164,11 @@
                 </div>
             </div>
 
-            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-4">
+            <button id="cameraPowerButton" onclick="toggleCameraHardware()" class="w-full tt-button border-zinc-700 bg-zinc-950 py-3 text-xs font-extrabold uppercase tracking-wider text-zinc-200 hover:bg-zinc-900">
+                📷 Turn Camera Off
+            </button>
+
+            <div class="tt-panel p-4 space-y-4">
                 <div class="flex justify-between items-center">
                     <label class="text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Master Teleprompter & Deck</label>
                     <div class="flex gap-2">
@@ -115,7 +178,7 @@
                 </div>
 
                 <div class="bg-black border border-zinc-900 p-4 rounded-xl space-y-2">
-                    <div id="teleprompterDisplay" class="teleprompter-text font-medium text-amber-100/90 h-[140px] overflow-y-auto flex flex-col scroll-smooth">
+                    <div id="teleprompterDisplay" class="teleprompter-text font-medium text-cyan-50/90 h-[140px] overflow-y-auto flex flex-col scroll-smooth">
                         Select Slide Deck to upload presentation graphics or track copy anchors here.
                     </div>
                 </div>
@@ -133,7 +196,7 @@
                         <span>Slide-linked Deck Manager</span>
                         <span id="slideCounter" class="font-medium">0 / 0</span>
                     </div>
-                    <button onclick="document.getElementById('slideUpload').click()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 py-2 px-3 rounded-lg text-xs font-semibold transition">Batch Upload Slides (.JPG / .PNG)</button>
+                    <button onclick="document.getElementById('slideUpload').click()" class="w-full tt-button py-2 px-3 rounded-lg text-xs font-semibold transition">Batch Upload Slides (.JPG / .PNG)</button>
                     <input type="file" id="slideUpload" multiple accept="image/*" onchange="handleSlideUpload(event)" class="block w-full cursor-pointer rounded-lg border border-zinc-800 bg-[#1c1c1e] text-xs text-zinc-400 file:mr-3 file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-xs file:font-bold file:text-zinc-200 hover:file:bg-zinc-700">
 
                     <div id="slideList" class="max-h-36 overflow-y-auto space-y-2 pr-1 hidden"></div>
@@ -145,56 +208,56 @@
                 </div>
             </div>
 
-            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+            <div class="tt-panel p-4 space-y-3">
                 <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Conversion & Offer Details</label>
                 <div class="space-y-2">
-                    <input type="text" id="prodName" placeholder="Product Name (e.g., The Dollhouse Brand Kit)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                    <input type="text" id="prodName" placeholder="Product Name (e.g., TikTok Live Offer Kit)" class="w-full tt-input">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="prodValue" placeholder="Original Value (e.g., $297)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
-                        <input type="text" id="prodPrice" placeholder="Live Offer (e.g., $47)" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                        <input type="text" id="prodValue" placeholder="Original Value (e.g., $297)" class="w-full tt-input">
+                        <input type="text" id="prodPrice" placeholder="Live Offer (e.g., $47)" class="w-full tt-input">
                     </div>
-                    <input type="text" id="prodCTA" placeholder="CTA (e.g., COMMENT 'GOLD')" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700">
+                    <input type="text" id="prodCTA" placeholder="CTA (e.g., COMMENT 'GOLD')" class="w-full tt-input">
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-1">
                     <div>
                         <label class="block text-[10px] uppercase font-bold text-zinc-500 mb-1">Scarcity Stock Level</label>
-                        <input type="number" id="prodStock" value="15" min="0" class="w-full bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none">
+                        <input type="number" id="prodStock" value="15" min="0" class="w-full tt-input">
                     </div>
                     <div class="flex items-end">
-                        <button onclick="dropStock()" class="w-full bg-rose-950/40 hover:bg-rose-950/80 border border-rose-900/40 text-rose-400 py-1.5 rounded-lg text-xs font-bold transition">🔥 Decrease Stock (-1)</button>
+                        <button onclick="dropStock()" class="w-full border border-[#fe2c55]/50 bg-[#fe2c55]/10 text-[#ff8aa2] hover:bg-[#fe2c55]/20 py-1.5 rounded-full text-xs font-bold transition">🔥 Decrease Stock (-1)</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-1">
-                    <button onclick="pinProduct()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-xs font-bold transition">Pin To Live Stream</button>
-                    <button onclick="copyPinnedComment()" class="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 py-2 rounded-lg text-xs font-bold transition">📋 Copy Pinned Comment</button>
+                    <button onclick="pinProduct()" class="tt-button tt-button-primary py-2 rounded-lg text-xs font-bold transition">Pin To Live Stream</button>
+                    <button onclick="copyPinnedComment()" class="tt-button py-2 rounded-lg text-xs font-bold transition">📋 Copy Pinned Comment</button>
                 </div>
-                <div id="copyPinnedFeedback" class="hidden rounded-lg border border-emerald-900/50 bg-emerald-950/30 px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider text-emerald-300">Copied to Clipboard!</div>
+                <div id="copyPinnedFeedback" class="hidden rounded-full border border-cyan-400/40 bg-cyan-950/25 px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider text-cyan-200">Copied to Clipboard!</div>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="toggleOfferBanner()" id="btn-toggle-offer" class="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 py-2 rounded-lg text-xs font-bold transition">👁️ Hide Banner</button>
-                    <button onclick="clearProduct()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 py-2 rounded-lg text-xs font-semibold transition">Clear Banner</button>
+                    <button onclick="toggleOfferBanner()" id="btn-toggle-offer" class="tt-button py-2 rounded-lg text-xs font-bold transition">👁️ Hide Banner</button>
+                    <button onclick="clearProduct()" class="tt-button py-2 rounded-lg text-xs font-semibold transition">Clear Banner</button>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="saveOfferPreset()" class="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 py-2 rounded-lg text-xs font-bold transition">💾 Save Current Offer Preset</button>
-                    <button onclick="loadOfferPreset()" class="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 py-2 rounded-lg text-xs font-bold transition">📂 Load Saved Preset</button>
+                    <button onclick="saveOfferPreset()" class="tt-button py-2 rounded-lg text-xs font-bold transition">💾 Save Current Offer Preset</button>
+                    <button onclick="loadOfferPreset()" class="tt-button py-2 rounded-lg text-xs font-bold transition">📂 Load Saved Preset</button>
                 </div>
 
                 <div class="pt-2 border-t border-zinc-900 space-y-2">
                     <div class="flex items-center justify-between gap-3">
                         <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Urgency Countdown Timer (Minutes)</label>
-                        <span id="sidebarTimerDisplay" class="font-mono text-xs font-bold text-amber-300">0:00</span>
+                        <span id="sidebarTimerDisplay" class="font-mono text-xs font-bold text-cyan-300">0:00</span>
                     </div>
                     <div class="flex gap-2">
-                        <input type="number" id="timerDuration" value="5" min="1" max="60" class="w-20 bg-[#1c1c1e] border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-center text-zinc-200 focus:outline-none">
+                        <input type="number" id="timerDuration" value="5" min="1" max="60" class="w-20 tt-input text-center">
                         <button onclick="startCountdown()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold py-1.5 rounded-lg border border-zinc-700 transition">Start Timer</button>
                         <button onclick="stopCountdown()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold px-3 py-1.5 rounded-lg border border-zinc-800 transition">Reset</button>
                     </div>
                 </div>
             </div>
 
-            <div id="overlaySettingsContainer" class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
-                <label class="block text-[11px] uppercase font-bold text-amber-400 tracking-wider">Your Separate Webcam Box Position</label>
+            <div id="overlaySettingsContainer" class="tt-panel p-4 space-y-3">
+                <label class="block text-[11px] uppercase font-bold tt-label tracking-wider">Your Separate Webcam Box Position</label>
 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -233,7 +296,7 @@
                 </div>
             </div>
 
-            <div class="bg-[#121214] border border-zinc-800/60 p-4 rounded-xl space-y-3">
+            <div class="tt-panel p-4 space-y-3">
                 <label class="block text-[11px] uppercase font-bold text-zinc-400 tracking-wider">Stream Interaction Test Suite</label>
                 <label class="flex items-center gap-2 rounded-lg border border-zinc-800 bg-black px-3 py-2 text-[11px] font-bold text-zinc-400">
                     <input id="muteVoiceAnnouncements" type="checkbox" class="h-4 w-4 accent-zinc-400">
@@ -243,23 +306,35 @@
                     <button onclick="triggerAlert('follow', 'Mandy')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Follow</button>
                     <button onclick="triggerAlert('like', 'Designer')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Like</button>
                     <button onclick="triggerAlert('gift', 'VIP Customer', 'Rose Gold Chain')" class="bg-[#1c1c1e] hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium py-2 rounded-lg transition">Test Gift Injection</button>
-                    <button onclick="triggerAlert('sold', 'Buyer #' + Math.floor(Math.random()*900 + 100))" class="bg-emerald-950/40 hover:bg-emerald-950/80 border border-emerald-900/50 text-emerald-400 text-xs font-bold py-2 rounded-lg transition">Test Sold Alert</button>
+                    <button onclick="triggerAlert('sold', 'Buyer #' + Math.floor(Math.random()*900 + 100))" class="border border-[#25f4ee]/45 bg-[#25f4ee]/10 text-cyan-200 hover:bg-[#25f4ee]/20 text-xs font-bold py-2 rounded-full transition">Test Sold Alert</button>
                 </div>
             </div>
 
         </div>
 
         <div class="p-4 bg-black border-t border-zinc-900 text-center text-[10px] text-zinc-600 font-mono tracking-wider uppercase">
-            Powered by The Dollhouse Brand Studio
+            TikTok Live Commerce Studio
         </div>
     </div>
 
     <script>
+        /*
+         * Production Continuous Integration Note
+         *
+         * To ensure every save/edit pushes automatically to production without manual terminal builds:
+         * 1. Initialize Git in this project directory: git init
+         * 2. Link your repository to GitHub: git remote add origin [your-repo-link]
+         * 3. Connect this GitHub repository directly to your Vercel Dashboard.
+         * 4. Once connected, every single time you push an edit via VS Code or Git Desktop,
+         *    Vercel will automatically detect the push, run the Vite build, and update your
+         *    live production link within 30 seconds.
+         */
         const canvas = document.getElementById('liveCanvas');
         const ctx = canvas.getContext('2d');
         const video = document.getElementById('rawWebcam');
         const cameraSelect = document.getElementById('cameraSourceSelect');
         const cameraStatus = document.getElementById('cameraStatus');
+        const cameraPowerButton = document.getElementById('cameraPowerButton');
         const snapStatus = document.getElementById('snapStatus');
         const snapFilterToggle = document.getElementById('snapFilterToggle');
         const feedStatusBadge = document.getElementById('feedStatusBadge');
@@ -281,6 +356,7 @@
         let snapActiveLens = null;
         let snapAvailableLenses = [];
         let snapFiltersEnabled = false;
+        let cameraHardwareEnabled = true;
 
         let uploadedSlides = [];
         let activeSlideIndex = 0;
@@ -314,17 +390,21 @@
         }
 
         function updateStatusBadges() {
-            const snapActive = snapFiltersEnabled && snapOutputCanvas;
-            feedStatusBadge.innerText = snapActive ? 'FEED: SNAP FILTER ACTIVE' : 'FEED: RAW WEBCAM';
+            const snapActive = snapFiltersEnabled && snapOutputCanvas && cameraHardwareEnabled;
+            feedStatusBadge.innerText = cameraHardwareEnabled
+                ? (snapActive ? 'FEED: SNAP FILTER ACTIVE' : 'FEED: RAW WEBCAM')
+                : 'FEED: CAMERA OFF';
             feedStatusBadge.className = snapActive
-                ? 'rounded-full border border-emerald-700/70 bg-emerald-950/30 px-3 py-1 text-emerald-300'
-                : 'rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400';
+                ? 'rounded-full border border-cyan-400/70 bg-cyan-950/25 px-3 py-1 text-cyan-200'
+                : cameraHardwareEnabled
+                    ? 'rounded-full border border-zinc-800 bg-black/70 px-3 py-1 text-zinc-400'
+                    : 'rounded-full border border-red-800/70 bg-red-950/30 px-3 py-1 text-red-300';
 
             const environmentLabel = getEnvironmentLabel();
             environmentStatusBadge.innerText = `ENVIRONMENT: ${environmentLabel}`;
             environmentStatusBadge.className = environmentLabel === 'FILE ERROR'
                 ? 'rounded-full border border-red-800/70 bg-red-950/30 px-3 py-1 text-red-300'
-                : 'rounded-full border border-amber-700/60 bg-amber-950/20 px-3 py-1 text-amber-300';
+                : 'rounded-full border border-cyan-400/50 bg-cyan-950/20 px-3 py-1 text-cyan-300';
         }
 
         function formatCountdown(totalSeconds) {
@@ -334,6 +414,8 @@
         }
 
         async function startCamera(deviceId = '') {
+            cameraHardwareEnabled = true;
+            updateCameraPowerButton();
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
             }
@@ -357,6 +439,44 @@
                 console.warn("Camera streaming fallback link.", err);
                 cameraStatus.innerText = 'Camera blocked or unavailable';
             }
+        }
+
+        function updateCameraPowerButton() {
+            cameraPowerButton.innerText = cameraHardwareEnabled ? '📷 Turn Camera Off' : '🎥 Turn Camera On';
+            cameraPowerButton.className = cameraHardwareEnabled
+                ? 'w-full tt-button border-zinc-700 bg-zinc-950 py-3 text-xs font-extrabold uppercase tracking-wider text-zinc-200 hover:bg-zinc-900'
+                : 'w-full tt-button border-[#25f4ee]/70 bg-cyan-950/20 py-3 text-xs font-extrabold uppercase tracking-wider text-cyan-200 hover:bg-cyan-950/40';
+        }
+
+        async function toggleCameraHardware() {
+            if (cameraHardwareEnabled) {
+                cameraHardwareEnabled = false;
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
+                video.pause();
+                video.srcObject = null;
+                try {
+                    if (snapSession) {
+                        await snapSession.pause('live');
+                    }
+                } catch (err) {
+                    console.warn('Unable to pause Snap session while turning camera off.', err);
+                }
+                cameraStatus.innerText = 'Camera hardware off';
+                snapStatus.innerText = 'Camera off - stream intentionally black';
+                updateCameraPowerButton();
+                updateStatusBadges();
+                return;
+            }
+
+            await startCamera(cameraSelect.value);
+            if (snapFiltersEnabled) {
+                await routeStreamThroughSnap();
+            }
+            updateCameraPowerButton();
+            updateStatusBadges();
         }
 
         async function loadCameraDevices() {
@@ -407,10 +527,10 @@
             } catch (err) {
                 console.warn('Unable to pause Snap session during fallback.', err);
             }
-            if (!currentStream) {
+            if (!currentStream && cameraHardwareEnabled) {
                 await startCamera(cameraSelect.value);
             }
-            snapStatus.innerText = 'Snap unavailable - raw webcam live';
+            snapStatus.innerText = cameraHardwareEnabled ? 'Snap unavailable - raw webcam live' : 'Snap unavailable - camera remains off';
             updateStatusBadges();
         }
 
@@ -459,10 +579,16 @@
         }
 
         async function routeStreamThroughSnap() {
+            if (!cameraHardwareEnabled) {
+                snapStatus.innerText = 'Turn camera on before applying Snap filters';
+                updateStatusBadges();
+                throw new Error('Camera hardware is off');
+            }
+
             if (!currentStream) {
                 snapStatus.innerText = 'Start camera before applying lens';
                 await fallbackToRawCamera('No camera stream available for Snap; routing raw webcam.');
-                return;
+                throw new Error('No camera stream available');
             }
 
             try {
@@ -576,6 +702,7 @@
                 }
                 snapActiveLens = null;
                 snapStatus.innerText = 'Snap filters off - raw camera live';
+                updateStatusBadges();
                 return;
             }
 
@@ -599,15 +726,15 @@
 
         function renderLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const cameraReady = video.readyState >= 2 && video.videoWidth > 0;
-            const snapReady = snapFiltersEnabled && snapOutputCanvas && snapOutputCanvas.width > 0;
-            const activeCameraSource = snapReady ? snapOutputCanvas : video;
-            const activeCameraReady = snapReady || cameraReady;
+            const cameraReady = cameraHardwareEnabled && video.readyState >= 2 && video.videoWidth > 0;
+            const snapReady = cameraHardwareEnabled && snapFiltersEnabled && snapOutputCanvas && snapOutputCanvas.width > 0 && snapOutputCanvas.height > 0;
+            const activeCameraSource = snapFiltersEnabled ? snapOutputCanvas : video;
+            const activeCameraReady = snapFiltersEnabled ? snapReady : cameraReady;
             sidebarTimerDisplay.innerText = formatCountdown(countdownTimeRemaining);
             updateStatusBadges();
 
             if (viewMode === 'presentation') {
-                renderLuxuryStageBackground();
+                renderTikTokStageBackground();
 
                 if (uploadedSlides.length > 0 && slideImageObj.src) {
                     ctx.drawImage(slideImageObj, 0, 0, canvas.width, canvas.height);
@@ -618,19 +745,36 @@
 
                 ctx.save();
                 applyClippingMask(ctx, overlayConfig.x, overlayConfig.y, overlayConfig.size);
-                if (activeCameraReady) {
+                if (!cameraHardwareEnabled) {
+                    renderCameraOffFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
+                } else if (activeCameraReady) {
                     drawMediaCover(activeCameraSource, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size);
+                } else if (snapFiltersEnabled) {
+                    renderSnapWaitingFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
                 } else {
                     renderCameraPlaceholder(overlayConfig.x, overlayConfig.y, overlayConfig.size);
                 }
                 ctx.restore();
                 renderCameraFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
             } else {
-                if (activeCameraReady) {
+                if (!cameraHardwareEnabled) {
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    renderCenteredStageMessage(
+                        "CAMERA OFF",
+                        "Turn camera on from the control panel"
+                    );
+                } else if (activeCameraReady) {
                     drawMediaCover(activeCameraSource, 0, 0, canvas.width, canvas.height);
                     renderStageVignette();
+                } else if (snapFiltersEnabled) {
+                    renderTikTokStageBackground();
+                    renderCenteredStageMessage(
+                        "SNAP FILTER WAITING",
+                        "Camera Kit is preparing the filtered output"
+                    );
                 } else {
-                    renderLuxuryStageBackground();
+                    renderTikTokStageBackground();
                     renderCenteredStageMessage(
                         "CAMERA PREVIEW WAITING",
                         "Allow camera access or pick a Snapchat virtual camera"
@@ -683,16 +827,16 @@
             ctx.drawImage(source, cropX, cropY, cropWidth, cropHeight, targetX, targetY, targetWidth, targetHeight);
         }
 
-        function renderLuxuryStageBackground() {
+        function renderTikTokStageBackground() {
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#0B0B0C');
-            gradient.addColorStop(0.52, '#121214');
-            gradient.addColorStop(1, '#070708');
+            gradient.addColorStop(0, '#050505');
+            gradient.addColorStop(0.52, '#111113');
+            gradient.addColorStop(1, '#050505');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.save();
-            ctx.strokeStyle = 'rgba(212, 163, 89, 0.06)';
+            ctx.strokeStyle = 'rgba(37, 244, 238, 0.055)';
             ctx.lineWidth = 1;
             const grid = 72;
             for (let x = 0; x <= canvas.width; x += grid) {
@@ -746,7 +890,7 @@
         function renderStageIntro() {
             renderCenteredStageMessage(
                 "READY TO LIVE LAUNCH",
-                "Upload slides below to fill this luxury commerce stage"
+                "Upload slides below to fill this TikTok live stage"
             );
         }
 
@@ -759,7 +903,7 @@
 
             ctx.save();
             ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-            ctx.strokeStyle = 'rgba(212, 163, 89, 0.28)';
+            ctx.strokeStyle = 'rgba(37, 244, 238, 0.24)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.roundRect(margin, footerY, footerWidth, footerHeight, 24);
@@ -784,9 +928,9 @@
         function renderCenteredStageMessage(title, subtitle) {
             ctx.save();
             ctx.textAlign = 'center';
-            ctx.fillStyle = '#d4a359';
+            ctx.fillStyle = '#25f4ee';
             ctx.font = '700 18px ui-monospace, SFMono-Regular, Menlo, monospace';
-            ctx.fillText('THE DOLLHOUSE LIVE COMMERCE STUDIO', canvas.width / 2, canvas.height / 2 - 88);
+            ctx.fillText('TIKTOK LIVE COMMERCE STUDIO', canvas.width / 2, canvas.height / 2 - 88);
             ctx.fillStyle = '#f4f4f5';
             ctx.font = '800 34px system-ui';
             ctx.fillText(title, canvas.width / 2, canvas.height / 2 - 22);
@@ -822,13 +966,34 @@
             ctx.fillText("Waiting for Snapchat feed", x, y + 24);
         }
 
+        function renderSnapWaitingFrame(x, y, size) {
+            ctx.fillStyle = '#050506';
+            ctx.fillRect(x - size / 2, y - size / 2, size, size);
+            ctx.fillStyle = '#25f4ee';
+            ctx.font = 'bold 24px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText("SNAP FILTER WAITING", x, y - 8);
+            ctx.font = '18px system-ui';
+            ctx.fillStyle = '#a1a1aa';
+            ctx.fillText("SDK output loading", x, y + 26);
+        }
+
+        function renderCameraOffFrame(x, y, size) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x - size / 2, y - size / 2, size, size);
+            ctx.fillStyle = '#52525b';
+            ctx.font = 'bold 26px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText("CAMERA OFF", x, y + 8);
+        }
+
         function renderCameraFrame(x, y, size) {
             ctx.save();
             const ring = ctx.createLinearGradient(x - size / 2, y - size / 2, x + size / 2, y + size / 2);
-            ring.addColorStop(0, 'rgba(251, 191, 36, 0.95)');
-            ring.addColorStop(0.45, 'rgba(212, 163, 89, 0.6)');
-            ring.addColorStop(1, 'rgba(244, 63, 94, 0.45)');
-            ctx.shadowColor = 'rgba(212, 163, 89, 0.42)';
+            ring.addColorStop(0, 'rgba(37, 244, 238, 0.95)');
+            ring.addColorStop(0.48, 'rgba(255, 255, 255, 0.58)');
+            ring.addColorStop(1, 'rgba(254, 44, 85, 0.9)');
+            ctx.shadowColor = 'rgba(37, 244, 238, 0.28)';
             ctx.shadowBlur = 24;
             ctx.strokeStyle = ring;
             ctx.lineWidth = 7;
@@ -909,7 +1074,7 @@
             ctx.shadowBlur = 28;
             ctx.shadowOffsetY = 14;
             ctx.fillStyle = '#0A0A0C';
-            ctx.strokeStyle = 'rgba(212, 163, 89, 0.35)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.roundRect(margin, topY, bannerWidth, bannerHeight, radius);
@@ -960,19 +1125,19 @@
             const badgeX = Math.min(leftX + liveMetrics.width + 34, splitX - badgeWidth - 20);
             const badgeY = offerY - 42;
             ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
-            ctx.strokeStyle = 'rgba(212, 163, 89, 0.72)';
+            ctx.strokeStyle = 'rgba(37, 244, 238, 0.72)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
             ctx.fill();
             ctx.stroke();
 
-            ctx.fillStyle = '#FBBF24';
+            ctx.fillStyle = '#25f4ee';
             ctx.font = '800 18px ui-monospace, SFMono-Regular, Menlo, monospace';
             ctx.textAlign = 'center';
             ctx.fillText(badgeText, badgeX + badgeWidth / 2, badgeY + 30);
 
-            ctx.strokeStyle = 'rgba(212, 163, 89, 0.18)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(splitX, topY + 52);
@@ -987,7 +1152,7 @@
             ctx.fillText(safeCtaText, rightX, ctaY);
 
             const expireText = 'ENDS WHEN TIMER HITS ZERO';
-            ctx.fillStyle = '#FBBF24';
+            ctx.fillStyle = '#25f4ee';
             setFittedFont(expireText, '800', 22, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 14);
             ctx.fillText(expireText, rightX, timerLabelY);
 
@@ -1315,7 +1480,7 @@
                     <div class="flex flex-col gap-1.5 p-2.5 border bg-black rounded-xl ${i === activeSlideIndex ? 'border-zinc-500' : 'border-zinc-800'}">
                         <div class="flex items-center justify-between text-[11px] font-bold text-zinc-400">
                             <span>DECK POSITION ${i + 1}</span>
-                            <button onclick="selectSlide(${i})" class="text-[10px] text-emerald-400 uppercase tracking-wider font-extrabold">Active View</button>
+                            <button onclick="selectSlide(${i})" class="text-[10px] text-cyan-300 uppercase tracking-wider font-extrabold">Active View</button>
                         </div>
                         <textarea oninput="uploadedSlides[${i}].script = this.value; if(activeSlideIndex===${i}) updateTeleprompter();" class="w-full bg-[#1c1c1e] text-xs p-2 border border-zinc-800 rounded-md text-zinc-300 focus:outline-none focus:border-zinc-700" rows="2">${slide.script}</textarea>
                     </div>`;
