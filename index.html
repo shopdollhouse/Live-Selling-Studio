@@ -6,8 +6,17 @@
     <title>Live Selling Studio - Dual Layer Build</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script type="module">
-        if (window.location.protocol !== 'file:') {
-            import('./snap-camera-kit-bridge.js');
+        import { bootstrapCameraKit, createMediaStreamSource, Transform2D } from "@snap/camera-kit";
+
+        if (window.location.protocol === 'file:') {
+            window.SnapCameraKitBridgeError = 'Camera Kit requires localhost or HTTPS';
+        } else {
+            window.SnapCameraKitBridge = {
+                bootstrapCameraKit,
+                createMediaStreamSource,
+                Transform2D
+            };
+            window.dispatchEvent(new CustomEvent('snap-camera-kit-ready'));
         }
     </script>
     <style>
@@ -127,6 +136,10 @@
                     <button onclick="setViewMode('presentation')" id="btn-mode-pres" class="py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-100 text-zinc-900 transition">Presentation Mode</button>
                     <button onclick="setViewMode('camera')" id="btn-mode-cam" class="py-2 px-3 text-xs font-semibold rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition">Full Camera Mode</button>
                 </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="toggleCameraPreviewLayer()" id="btn-toggle-camera-preview" class="tt-button py-2 rounded-lg text-xs font-bold transition">🎥 Hide Camera Box</button>
+                    <button onclick="toggleConversionFooter()" id="btn-toggle-footer" class="tt-button py-2 rounded-lg text-xs font-bold transition">🛒 Hide Buy Steps</button>
+                </div>
                 <p class="text-[10px] text-zinc-500 leading-normal"><strong>Presentation Mode</strong> renders your uploaded slide graphics across the full frame with your filtered webcam running inside a clean, separate overlay box.</p>
             </div>
 
@@ -165,6 +178,9 @@
                 </select>
                 <div id="snapStatus" class="rounded-lg border border-zinc-900 bg-black px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
                     Camera Kit idle
+                </div>
+                <div id="snapOriginHint" class="rounded-lg border border-zinc-900 bg-black/60 px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
+                    Snap origin: checking
                 </div>
                 <button id="nativeGlowButton" onclick="toggleNativeStudioGlow()" class="w-full rounded-full border border-amber-300/70 bg-amber-950/10 px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-amber-200 hover:bg-amber-950/25 transition">
                     ✨ Turn On Native Studio Glow
@@ -342,6 +358,8 @@
         </div>
     </div>
 
+    <canvas id="snapSdkOutput" width="720" height="1280" aria-hidden="true" style="position:fixed;left:-10000px;top:0;width:720px;height:1280px;opacity:0;pointer-events:none;"></canvas>
+
     <script>
         /*
          * Production Continuous Integration Note
@@ -357,12 +375,14 @@
         const canvas = document.getElementById('liveCanvas');
         const ctx = canvas.getContext('2d');
         const video = document.getElementById('rawWebcam');
+        const snapRenderCanvas = document.getElementById('snapSdkOutput');
         const cameraSelect = document.getElementById('cameraSourceSelect');
         const cameraStatus = document.getElementById('cameraStatus');
         const cameraPowerButton = document.getElementById('cameraPowerButton');
         const snapStatus = document.getElementById('snapStatus');
         const snapFilterToggle = document.getElementById('snapFilterToggle');
         const nativeGlowButton = document.getElementById('nativeGlowButton');
+        const snapOriginHint = document.getElementById('snapOriginHint');
         const feedStatusBadge = document.getElementById('feedStatusBadge');
         const environmentStatusBadge = document.getElementById('environmentStatusBadge');
         const sidebarTimerDisplay = document.getElementById('sidebarTimerDisplay');
@@ -379,6 +399,8 @@
         let overlayConfig = { size: 420, x: 540, y: 1260 };
         let prompterMode = 'master';
         let offerBannerVisible = true;
+        let cameraPreviewVisible = true;
+        let conversionFooterVisible = true;
         let currentStream = null;
         let snapModule = null;
         let snapCameraKit = null;
@@ -513,6 +535,11 @@
             environmentStatusBadge.className = environmentLabel === 'FILE ERROR'
                 ? 'rounded-full border border-red-800/70 bg-red-950/30 px-3 py-1 text-red-300'
                 : 'rounded-full border border-cyan-400/50 bg-cyan-950/20 px-3 py-1 text-cyan-300';
+        }
+
+        function updateSnapOriginHint() {
+            const origin = window.location.origin === 'null' ? 'file:// is not supported' : window.location.origin;
+            snapOriginHint.innerText = `Snap origin: ${origin}`;
         }
 
         function safeStorageGet(key) {
@@ -713,11 +740,13 @@
                 snapModule = window.SnapCameraKitBridge;
                 return snapModule;
             }
+            if (window.SnapCameraKitBridgeError) {
+                snapStatus.innerText = `Camera Kit package bridge failed: ${window.SnapCameraKitBridgeError}`;
+            }
 
             if (getEnvironmentLabel() !== 'FILE ERROR') {
                 try {
                     snapStatus.innerText = 'Waiting for Camera Kit package';
-                    await import('./snap-camera-kit-bridge.js');
                     await waitForSnapBridge();
                     snapModule = window.SnapCameraKitBridge;
                     return snapModule;
@@ -744,7 +773,7 @@
             throw lastError || new Error('Camera Kit SDK failed to load');
         }
 
-        function waitForSnapBridge(timeoutMs = 3000) {
+        function waitForSnapBridge(timeoutMs = 7000) {
             if (window.SnapCameraKitBridge) return Promise.resolve();
             return new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => {
@@ -763,26 +792,22 @@
             let lastError = null;
             const failures = [];
 
-            for (const moduleUrl of snapSdkModuleUrls) {
-                try {
-                    snapStatus.innerText = 'Bootstrapping Camera Kit';
-                    const kitModule = window.SnapCameraKitBridge || await import(moduleUrl);
-                    if (!kitModule.bootstrapCameraKit) {
-                        throw new Error('bootstrapCameraKit export missing');
-                    }
-                    const cameraKit = await kitModule.bootstrapCameraKit({ apiToken });
-                    snapModule = kitModule;
-                    return cameraKit;
-                } catch (err) {
-                    lastError = err;
-                    failures.push(`${moduleUrl}: ${err?.message || err?.name || 'unknown error'}`);
-                    console.warn(`Camera Kit bootstrap failed from ${moduleUrl}.`, err);
-                    if (window.SnapCameraKitBridge) break;
+            try {
+                snapStatus.innerText = 'Bootstrapping Camera Kit package';
+                const kitModule = await loadSnapModule();
+                if (!kitModule.bootstrapCameraKit) {
+                    throw new Error('bootstrapCameraKit export missing');
                 }
+                snapModule = kitModule;
+                return await kitModule.bootstrapCameraKit({ apiToken });
+            } catch (err) {
+                lastError = err;
+                failures.push(`local package bridge: ${err?.message || err?.name || 'unknown error'}`);
+                console.warn('Camera Kit bootstrap failed from local package bridge.', err);
             }
 
             console.warn('All Camera Kit bootstrap attempts failed.', failures);
-            throw new Error('All Camera Kit SDK bootstrap attempts failed. Use the Staging API Token, allow http://localhost:8080 in Snap, or switch to the official npm/Vite build.');
+            throw new Error('Camera Kit bootstrap failed. Use the Staging API Token on localhost, allow http://localhost:8080 in Snap, and open the Vite URL instead of file://.');
         }
 
         async function ensureSnapSession() {
@@ -820,10 +845,10 @@
             }
 
             if (!snapSession) {
-                snapSession = await snapCameraKit.createSession();
-                snapOutputCanvas = snapSession.output.live;
-                snapOutputCanvas.width = 1280;
-                snapOutputCanvas.height = 720;
+                snapRenderCanvas.width = 720;
+                snapRenderCanvas.height = 1280;
+                snapSession = await snapCameraKit.createSession({ liveRenderTarget: snapRenderCanvas });
+                snapOutputCanvas = snapRenderCanvas;
                 snapSession.events.addEventListener('error', (event) => {
                     console.warn('Camera Kit session error:', event.detail?.error || event);
                     snapStatus.innerText = 'Snap lens error - removed by SDK';
@@ -850,11 +875,15 @@
 
             try {
                 const { kit, session } = await ensureSnapSession();
-                const source = kit.createMediaStreamSource(currentStream, { cameraType: 'front' });
-                await session.setSource(source);
-                if (source.setTransform && kit.Transform2D?.MirrorX) {
-                    source.setTransform(kit.Transform2D.MirrorX);
+                if (!kit.createMediaStreamSource) {
+                    throw new Error('createMediaStreamSource export missing');
                 }
+
+                const source = kit.createMediaStreamSource(currentStream, {
+                    transform: kit.Transform2D?.MirrorX,
+                    cameraType: 'user'
+                });
+                await session.setSource(source);
                 if (source.setRenderSize) {
                     source.setRenderSize(720, 1280);
                 }
@@ -985,6 +1014,7 @@
         syncOverlayControls();
         updateOfferVisibilityButton();
         updateStatusBadges();
+        updateSnapOriginHint();
         restoreSnapCredentials();
         updateNativeGlowButton();
         initializeVoiceProfiles();
@@ -1014,19 +1044,21 @@
                     renderStageIntro();
                 }
 
-                ctx.save();
-                applyClippingMask(ctx, overlayConfig.x, overlayConfig.y, overlayConfig.size);
-                if (!cameraHardwareEnabled) {
-                    renderCameraOffFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
-                } else if (activeCameraReady) {
-                    drawCameraFeed(activeCameraSource, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size, useNativeGlow);
-                } else if (snapFiltersEnabled) {
-                    renderSnapWaitingFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
-                } else {
-                    renderCameraPlaceholder(overlayConfig.x, overlayConfig.y, overlayConfig.size);
+                if (cameraPreviewVisible) {
+                    ctx.save();
+                    applyClippingMask(ctx, overlayConfig.x, overlayConfig.y, overlayConfig.size);
+                    if (!cameraHardwareEnabled) {
+                        renderCameraOffFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
+                    } else if (activeCameraReady) {
+                        drawCameraFeed(activeCameraSource, overlayConfig.x - overlayConfig.size/2, overlayConfig.y - overlayConfig.size/2, overlayConfig.size, overlayConfig.size, useNativeGlow);
+                    } else if (snapFiltersEnabled) {
+                        renderSnapWaitingFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
+                    } else {
+                        renderCameraPlaceholder(overlayConfig.x, overlayConfig.y, overlayConfig.size);
+                    }
+                    ctx.restore();
+                    renderCameraFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
                 }
-                ctx.restore();
-                renderCameraFrame(overlayConfig.x, overlayConfig.y, overlayConfig.size);
             } else {
                 if (!cameraHardwareEnabled) {
                     ctx.fillStyle = '#000000';
@@ -1066,7 +1098,9 @@
                 buyerAlertTimer--;
             }
 
-            renderConversionFooter();
+            if (conversionFooterVisible) {
+                renderConversionFooter();
+            }
             requestAnimationFrame(renderLoop);
         }
 
@@ -1287,38 +1321,42 @@
             ctx.save();
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
             ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
             ctx.beginPath();
-            if (currentShape === 'circle') {
-                ctx.arc(x, y, size / 2, 0, Math.PI * 2);
-            } else if (currentShape === 'rounded') {
-                ctx.roundRect(x - size / 2, y - size / 2, size, size, 40);
-            } else if (currentShape === 'heart') {
-                const top = y - size / 2;
-                const left = x - size / 2;
-                ctx.moveTo(x, top + size * 0.3);
-                ctx.bezierCurveTo(x - size * 0.35, top, left, top + size * 0.45, x, top + size);
-                ctx.bezierCurveTo(x + size, top + size * 0.45, x + size * 0.35, top, x, top + size * 0.3);
-            } else {
-                ctx.rect(x - size / 2, y - size / 2, size, size);
+            traceCameraFramePath(ctx, x, y, size);
+
+            if (currentShape === 'heart') {
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.34)';
+                ctx.shadowBlur = 14;
             }
+
             ctx.stroke();
             ctx.restore();
         }
 
-        function applyClippingMask(context, x, y, size) {
-            context.beginPath();
+        function traceCameraFramePath(context, x, y, size) {
             if (currentShape === 'circle') {
                 context.arc(x, y, size / 2, 0, Math.PI * 2);
             } else if (currentShape === 'rounded') {
-                context.roundRect(x - size/2, y - size/2, size, size, 40);
+                context.roundRect(x - size / 2, y - size / 2, size, size, 40);
             } else if (currentShape === 'heart') {
-                let top = y - size/2, left = x - size/2;
-                context.moveTo(x, top + size * 0.3);
-                context.bezierCurveTo(x - size * 0.35, top, left, top + size * 0.45, x, top + size);
-                context.bezierCurveTo(x + size, top + size * 0.45, x + size * 0.35, top, x, top + size * 0.3);
+                const bottomY = y + size * 0.42;
+                const notchY = y - size * 0.18;
+                context.moveTo(x, bottomY);
+                context.bezierCurveTo(x - size * 0.47, y + size * 0.16, x - size * 0.52, y - size * 0.12, x - size * 0.30, y - size * 0.30);
+                context.bezierCurveTo(x - size * 0.16, y - size * 0.43, x - size * 0.03, y - size * 0.35, x, notchY);
+                context.bezierCurveTo(x + size * 0.03, y - size * 0.35, x + size * 0.16, y - size * 0.43, x + size * 0.30, y - size * 0.30);
+                context.bezierCurveTo(x + size * 0.52, y - size * 0.12, x + size * 0.47, y + size * 0.16, x, bottomY);
+                context.closePath();
             } else {
                 context.rect(x - size / 2, y - size / 2, size, size);
             }
+        }
+
+        function applyClippingMask(context, x, y, size) {
+            context.beginPath();
+            traceCameraFramePath(context, x, y, size);
             context.clip();
         }
 
@@ -1631,6 +1669,26 @@
             updateOfferVisibilityButton();
         }
 
+        function updateCameraPreviewButton() {
+            const btn = document.getElementById('btn-toggle-camera-preview');
+            btn.innerText = cameraPreviewVisible ? '🎥 Hide Camera Box' : '🎥 Show Camera Box';
+        }
+
+        function toggleCameraPreviewLayer() {
+            cameraPreviewVisible = !cameraPreviewVisible;
+            updateCameraPreviewButton();
+        }
+
+        function updateConversionFooterButton() {
+            const btn = document.getElementById('btn-toggle-footer');
+            btn.innerText = conversionFooterVisible ? '🛒 Hide Buy Steps' : '🛒 Show Buy Steps';
+        }
+
+        function toggleConversionFooter() {
+            conversionFooterVisible = !conversionFooterVisible;
+            updateConversionFooterButton();
+        }
+
         function clearProduct() {
             activeProduct = null;
         }
@@ -1639,7 +1697,11 @@
             setViewMode('camera');
             activeProduct = null;
             offerBannerVisible = true;
+            cameraPreviewVisible = true;
+            conversionFooterVisible = true;
             updateOfferVisibilityButton();
+            updateCameraPreviewButton();
+            updateConversionFooterButton();
             countdownTimeRemaining = 0;
             buyerAlertTimer = 0;
             recentBuyerName = null;
