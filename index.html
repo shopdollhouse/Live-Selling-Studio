@@ -236,10 +236,11 @@
                 <div class="space-y-2">
                     <input type="text" id="prodName" placeholder="Product Name (e.g., TikTok Live Offer Kit)" class="w-full tt-input">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="prodValue" placeholder="Original Value (e.g., $297)" class="w-full tt-input">
-                        <input type="text" id="prodPrice" placeholder="Live Offer (e.g., $47)" class="w-full tt-input">
+                        <input type="text" id="prodValue" placeholder="Value (e.g., $297)" class="w-full tt-input">
+                        <input type="text" id="prodOriginalPrice" placeholder="Was Price (e.g., $197)" class="w-full tt-input">
                     </div>
-                    <input type="text" id="prodCTA" placeholder="CTA (e.g., COMMENT 'GOLD')" class="w-full tt-input">
+                    <input type="text" id="prodPrice" placeholder="Live Offer (e.g., $47)" class="w-full tt-input">
+                    <input type="text" id="prodCTA" placeholder="CTA (default: LINK IN BIO)" class="w-full tt-input">
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-1">
@@ -420,6 +421,7 @@
         let activeProduct = {
             name: 'YOUR BRAND KIT',
             value: '$198',
+            originalPrice: '$147',
             price: '$97',
             cta: 'LINK IN BIO',
             stock: '15'
@@ -1387,18 +1389,24 @@
             const leftMax = splitX - leftX - 42;
             const rightMax = rightX - splitX - 26;
             const titleY = topY + 70;
-            const valueY = topY + 142;
-            const offerY = topY + 232;
-            const ctaY = topY + 70;
-            const timerLabelY = topY + 130;
-            const stockY = topY + 190;
+            const valueY = topY + 124;
+            const originalPriceY = topY + 166;
+            const offerY = topY + 246;
+            const ctaLabelY = topY + 68;
+            const ctaPillY = topY + 88;
+            const timerLabelY = topY + 166;
+            const stockY = topY + 218;
 
             ctx.save();
             ctx.shadowColor = 'rgba(0, 0, 0, 0.44)';
             ctx.shadowBlur = 28;
             ctx.shadowOffsetY = 14;
-            ctx.fillStyle = '#0A0A0C';
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            const cardFill = ctx.createLinearGradient(margin, topY, margin + bannerWidth, topY + bannerHeight);
+            cardFill.addColorStop(0, '#070708');
+            cardFill.addColorStop(0.56, '#0A0A0C');
+            cardFill.addColorStop(1, '#111113');
+            ctx.fillStyle = cardFill;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.roundRect(margin, topY, bannerWidth, bannerHeight, radius);
@@ -1415,6 +1423,13 @@
             ctx.roundRect(margin + 2, topY + 2, bannerWidth - 4, bannerHeight - 4, radius - 2);
             ctx.fill();
 
+            ctx.strokeStyle = 'rgba(37, 244, 238, 0.34)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(margin + radius, topY + 1);
+            ctx.lineTo(margin + bannerWidth - radius, topY + 1);
+            ctx.stroke();
+
             ctx.textAlign = 'left';
             ctx.fillStyle = '#ffffff';
             const rawTitleText = activeProduct.name.toUpperCase();
@@ -1422,22 +1437,27 @@
             setFittedFont(titleText, '900', 41, 'system-ui', leftMax, 26);
             ctx.fillText(titleText, leftX, titleY);
 
-            const originalValue = activeProduct.value || '$297';
-            const valueText = `ORIGINAL VALUE ${originalValue}`.toUpperCase();
-            ctx.fillStyle = '#a1a1aa';
-            setFittedFont(valueText, '700', 27, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 18);
+            const valueText = `VALUE: ${activeProduct.value || '$297'}`.toUpperCase();
+            ctx.fillStyle = '#F4F4F5';
+            setFittedFont(valueText, '800', 24, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 16);
             ctx.fillText(valueText, leftX, valueY);
 
-            const originalMetrics = ctx.measureText(valueText);
+            const originalPrice = activeProduct.originalPrice || activeProduct.value || '$197';
+            const originalPriceText = `WAS ${originalPrice}`.toUpperCase();
+            ctx.fillStyle = '#a1a1aa';
+            setFittedFont(originalPriceText, '700', 27, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 18);
+            ctx.fillText(originalPriceText, leftX, originalPriceY);
+
+            const originalMetrics = ctx.measureText(originalPriceText);
             ctx.strokeStyle = '#F43F5E';
             ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.moveTo(leftX, valueY - 10);
-            ctx.lineTo(leftX + originalMetrics.width, valueY - 10);
+            ctx.moveTo(leftX, originalPriceY - 10);
+            ctx.lineTo(leftX + originalMetrics.width, originalPriceY - 10);
             ctx.stroke();
 
             const liveOffer = activeProduct.price || 'LIVE OFFER';
-            const badgeText = "TODAY'S LIVE SPECIAL ONLY";
+            const badgeText = "INSTANT DIGITAL ACCESS";
             const badgeWidth = 314;
             const badgeHeight = 48;
             const priceMax = Math.max(150, leftMax - badgeWidth - 40);
@@ -1448,15 +1468,15 @@
             const liveMetrics = ctx.measureText(liveOffer);
             const badgeX = Math.min(leftX + liveMetrics.width + 34, splitX - badgeWidth - 20);
             const badgeY = offerY - 42;
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
-            ctx.strokeStyle = 'rgba(37, 244, 238, 0.72)';
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.10)';
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.72)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
             ctx.fill();
             ctx.stroke();
 
-            ctx.fillStyle = '#25f4ee';
+            ctx.fillStyle = '#FBBF24';
             ctx.font = '800 18px ui-monospace, SFMono-Regular, Menlo, monospace';
             ctx.textAlign = 'center';
             ctx.fillText(badgeText, badgeX + badgeWidth / 2, badgeY + 30);
@@ -1469,25 +1489,45 @@
             ctx.stroke();
 
             ctx.textAlign = 'right';
-            const ctaText = activeProduct.cta || "COMMENT 'BUY' TO UNLOCK LINK";
-            ctx.fillStyle = '#ffffff';
-            const safeCtaText = ctaText.length > 30 ? `${ctaText.slice(0, 30)}...` : ctaText;
-            setFittedFont(safeCtaText, '850', 28, 'system-ui', rightMax, 12);
-            ctx.fillText(safeCtaText, rightX, ctaY);
+            const ctaText = (activeProduct.cta || 'LINK IN BIO').toUpperCase();
+            ctx.fillStyle = '#a1a1aa';
+            setFittedFont('GET INSTANT ACCESS', '850', 17, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
+            ctx.fillText('GET INSTANT ACCESS', rightX, ctaLabelY);
 
-            const expireText = 'ENDS WHEN TIMER HITS ZERO';
-            ctx.fillStyle = '#25f4ee';
+            const pillWidth = Math.min(rightMax, 304);
+            const pillHeight = 58;
+            const pillX = rightX - pillWidth;
+            const pillGradient = ctx.createLinearGradient(pillX, ctaPillY, rightX, ctaPillY + pillHeight);
+            pillGradient.addColorStop(0, '#25F4EE');
+            pillGradient.addColorStop(1, '#34D399');
+            ctx.fillStyle = pillGradient;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(pillX, ctaPillY, pillWidth, pillHeight, pillHeight / 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#050505';
+            const safeCtaText = ctaText.length > 22 ? `${ctaText.slice(0, 22)}...` : ctaText;
+            setFittedFont(safeCtaText, '950', 29, 'system-ui', pillWidth - 34, 16);
+            ctx.textAlign = 'center';
+            ctx.fillText(safeCtaText, pillX + pillWidth / 2, ctaPillY + 38);
+            ctx.textAlign = 'right';
+
+            const expireText = 'SPECIAL EXPIRES WHEN TIMER HITS ZERO';
+            ctx.fillStyle = '#FBBF24';
             setFittedFont(expireText, '800', 22, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 14);
             ctx.fillText(expireText, rightX, timerLabelY);
 
-            const stockText = `⚠ ONLY ${activeProduct.stock} COPIES LEFT`;
+            const stockText = `⚠ ONLY ${activeProduct.stock} DIGITAL SPOTS LEFT`;
             ctx.fillStyle = '#F43F5E';
             setFittedFont(stockText, '900', 28, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 18);
             ctx.fillText(stockText, rightX, stockY);
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.46)';
-            setFittedFont('SECURE YOUR SPOT BEFORE THE LIVE CLOSES', '700', 15, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
-            ctx.fillText('SECURE YOUR SPOT BEFORE THE LIVE CLOSES', rightX, topY + 248);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.58)';
+            setFittedFont('DOWNLOAD ACCESS DELIVERED AFTER CHECKOUT', '700', 15, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
+            ctx.fillText('DOWNLOAD ACCESS DELIVERED AFTER CHECKOUT', rightX, topY + 264);
         }
 
         function renderLiveTimer() {
@@ -1566,12 +1606,13 @@
         function pinProduct() {
             const name = document.getElementById('prodName').value;
             const value = document.getElementById('prodValue').value;
+            const originalPrice = document.getElementById('prodOriginalPrice').value;
             const price = document.getElementById('prodPrice').value;
-            const cta = document.getElementById('prodCTA').value;
+            const cta = document.getElementById('prodCTA').value || 'LINK IN BIO';
             const stock = document.getElementById('prodStock').value || '10';
 
             if(!name) return alert("Please enter a digital product name to showcase!");
-            activeProduct = { name, value, price, cta, stock };
+            activeProduct = { name, value, originalPrice, price, cta, stock };
             offerBannerVisible = true;
             updateOfferVisibilityButton();
         }
@@ -1580,7 +1621,7 @@
             const name = document.getElementById('prodName').value || activeProduct?.name || 'this offer';
             const price = document.getElementById('prodPrice').value || activeProduct?.price || 'the live price';
             const value = document.getElementById('prodValue').value || activeProduct?.value || 'the full value';
-            const comment = `💥 LIVE PRICE DROP: Grab the ${name} right now for just ${price} (Value: ${value})! Limited Live Stock left! Tap my profile bubble ➔ click the link in bio to lock yours in before the timer expires! 🛒🔥`;
+            const comment = `💥 LIVE PRICE DROP: Grab the ${name} digital product right now for just ${price} (Value: ${value})! Limited live access spots left. Tap my profile bubble ➔ click the link in bio to lock yours in before the timer expires! 🛒🔥`;
 
             try {
                 await navigator.clipboard.writeText(comment);
@@ -1606,6 +1647,7 @@
             return {
                 name: document.getElementById('prodName').value,
                 value: document.getElementById('prodValue').value,
+                originalPrice: document.getElementById('prodOriginalPrice').value,
                 price: document.getElementById('prodPrice').value,
                 cta: document.getElementById('prodCTA').value,
                 stock: document.getElementById('prodStock').value || '15'
@@ -1615,6 +1657,7 @@
         function setOfferInputs(offer) {
             document.getElementById('prodName').value = offer.name || '';
             document.getElementById('prodValue').value = offer.value || '';
+            document.getElementById('prodOriginalPrice').value = offer.originalPrice || '';
             document.getElementById('prodPrice').value = offer.price || '';
             document.getElementById('prodCTA').value = offer.cta || '';
             document.getElementById('prodStock').value = offer.stock || '15';
@@ -1650,7 +1693,10 @@
             try {
                 const offer = JSON.parse(saved);
                 setOfferInputs(offer);
-                activeProduct = offer;
+                activeProduct = {
+                    ...offer,
+                    originalPrice: offer.originalPrice || offer.value || ''
+                };
                 offerBannerVisible = true;
                 updateOfferVisibilityButton();
             } catch (err) {
