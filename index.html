@@ -621,6 +621,14 @@
                 currentStream.getTracks().forEach(track => track.stop());
             }
 
+            let resolvedDeviceId = deviceId;
+            if (deviceId === '__phone__') {
+                resolvedDeviceId = await findPreferredPhoneCameraId();
+                if (!resolvedDeviceId) {
+                    cameraStatus.innerText = 'Phone camera not found - using auto front camera';
+                }
+            }
+
             const frontCameraConstraints = {
                 facingMode: { ideal: 'user' },
                 width: { ideal: 1080 },
@@ -631,8 +639,8 @@
             try {
                 cameraStatus.innerText = 'Requesting camera permission';
                 currentStream = await navigator.mediaDevices.getUserMedia({
-                    video: deviceId
-                        ? { deviceId: { exact: deviceId }, width: { ideal: 1080 }, height: { ideal: 1920 }, aspectRatio: { ideal: 9 / 16 } }
+                    video: resolvedDeviceId
+                        ? { deviceId: { exact: resolvedDeviceId }, width: { ideal: 1080 }, height: { ideal: 1920 }, aspectRatio: { ideal: 9 / 16 } }
                         : frontCameraConstraints,
                     audio: false
                 });
@@ -716,7 +724,7 @@
             const cameras = devices
                 .filter(device => device.kind === 'videoinput')
                 .sort((a, b) => getCameraPriority(b) - getCameraPriority(a));
-            const activeDeviceId = requestedDeviceId || currentStream?.getVideoTracks()[0]?.getSettings().deviceId || '';
+            const activeDeviceId = requestedDeviceId || '';
 
             cameraSelect.innerHTML = '';
             if (!cameras.length) {
@@ -730,6 +738,11 @@
             autoOption.textContent = 'Auto Front / Selfie Camera';
             cameraSelect.appendChild(autoOption);
 
+            const phoneOption = document.createElement('option');
+            phoneOption.value = '__phone__';
+            phoneOption.textContent = 'Prefer Phone / iPhone Camera';
+            cameraSelect.appendChild(phoneOption);
+
             cameras.forEach((camera, index) => {
                 const option = document.createElement('option');
                 option.value = camera.deviceId;
@@ -742,9 +755,23 @@
             }
         }
 
+        async function findPreferredPhoneCameraId() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(device => device.kind === 'videoinput');
+                const phoneCamera = cameras
+                    .sort((a, b) => getCameraPriority(b) - getCameraPriority(a))
+                    .find(camera => getCameraPriority(camera) >= 4);
+                return phoneCamera?.deviceId || '';
+            } catch (err) {
+                console.warn('Unable to locate preferred phone camera.', err);
+                return '';
+            }
+        }
+
         function getCameraPriority(camera) {
             const label = (camera.label || '').toLowerCase();
-            if (label.includes('iphone') || label.includes('continuity') || label.includes('phone')) return 4;
+            if (label.includes('iphone') || label.includes('continuity') || label.includes('phone') || label.includes('mobile')) return 4;
             if (label.includes('front') || label.includes('facetime') || label.includes('user')) return 3;
             if (label.includes('snap') || label.includes('obs') || label.includes('virtual')) return 2;
             return 1;
