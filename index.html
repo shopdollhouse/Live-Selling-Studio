@@ -184,7 +184,12 @@
                     <p class="text-xs text-zinc-500">Digital Product Live Studio</p>
                     <p id="buildVersionLabel" class="mt-1 text-[10px] font-bold uppercase tracking-wider text-zinc-600">Build: checking</p>
                 </div>
-                <button onclick="resetStudioEngine()" class="shrink-0 tt-button-danger px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider hover:bg-red-950/40 rounded-full transition">⚠️ RESET STUDIO ENGINE</button>
+                <div class="shrink-0 flex flex-col gap-2">
+                    <button id="cameraPowerButton" onclick="toggleCameraHardware()" class="tt-button border-[#25f4ee]/60 bg-cyan-950/20 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-cyan-100 hover:bg-cyan-950/40 rounded-full transition">
+                        📷 Turn Camera Off
+                    </button>
+                    <button onclick="resetStudioEngine()" class="tt-button-danger px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider hover:bg-red-950/40 rounded-full transition">⚠️ RESET STUDIO ENGINE</button>
+                </div>
             </div>
 
             <div id="fileModeWarning" class="hidden rounded-xl border border-red-500/60 bg-red-950/25 px-4 py-3 text-xs font-bold leading-relaxed text-red-100">
@@ -305,10 +310,6 @@
                         <div class="panel-subtitle">Fast recovery controls during a live session.</div>
                     </div>
                 </div>
-                <button id="cameraPowerButton" onclick="toggleCameraHardware()" class="w-full tt-button border-zinc-700 bg-zinc-950 py-3 text-xs font-extrabold uppercase tracking-wider text-zinc-200 hover:bg-zinc-900">
-                    📷 Turn Camera Off
-                </button>
-
                 <button onclick="applyObsSafeLayout()" class="w-full tt-button tt-button-primary py-3 text-xs font-extrabold uppercase tracking-wider">
                     OBS Safe Layout
                 </button>
@@ -818,8 +819,8 @@
         function updateCameraPowerButton() {
             cameraPowerButton.innerText = cameraHardwareEnabled ? '📷 Turn Camera Off' : '🎥 Turn Camera On';
             cameraPowerButton.className = cameraHardwareEnabled
-                ? 'w-full tt-button border-zinc-700 bg-zinc-950 py-3 text-xs font-extrabold uppercase tracking-wider text-zinc-200 hover:bg-zinc-900'
-                : 'w-full tt-button border-[#25f4ee]/70 bg-cyan-950/20 py-3 text-xs font-extrabold uppercase tracking-wider text-cyan-200 hover:bg-cyan-950/40';
+                ? 'tt-button border-[#25f4ee]/60 bg-cyan-950/20 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-cyan-100 hover:bg-cyan-950/40 rounded-full transition'
+                : 'tt-button border-[#fe2c55]/70 bg-red-950/25 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-red-100 hover:bg-red-950/40 rounded-full transition';
         }
 
         function updateNativeGlowButton() {
