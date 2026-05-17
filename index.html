@@ -183,7 +183,7 @@
                     Snap origin: checking
                 </div>
                 <div class="rounded-lg border border-cyan-400/20 bg-cyan-950/10 px-3 py-2 text-[10px] leading-relaxed text-cyan-100/80">
-                    Snap checklist: use the Staging token on localhost. Use the Production token on Vercel. Add the exact localhost or Vercel URL in the Snap portal.
+                    Snap checklist: localhost uses your Staging token. Vercel uses your Production token. Add the exact Vercel HTTPS domain and http://localhost:8080 in the Snap portal.
                 </div>
                 <button onclick="clearSnapCredentials()" class="w-full tt-button border-red-900/50 bg-red-950/10 py-2 text-xs font-bold uppercase tracking-wider text-red-200 hover:bg-red-950/25">
                     Clear Snap Credentials
@@ -621,12 +621,19 @@
                 currentStream.getTracks().forEach(track => track.stop());
             }
 
+            const frontCameraConstraints = {
+                facingMode: { ideal: 'user' },
+                width: { ideal: 1080 },
+                height: { ideal: 1920 },
+                aspectRatio: { ideal: 9 / 16 }
+            };
+
             try {
                 cameraStatus.innerText = 'Requesting camera permission';
                 currentStream = await navigator.mediaDevices.getUserMedia({
                     video: deviceId
                         ? { deviceId: { exact: deviceId }, width: { ideal: 1080 }, height: { ideal: 1920 }, aspectRatio: { ideal: 9 / 16 } }
-                        : { width: { ideal: 1080 }, height: { ideal: 1920 }, aspectRatio: { ideal: 9 / 16 } },
+                        : frontCameraConstraints,
                     audio: false
                 });
                 video.srcObject = currentStream;
