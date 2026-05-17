@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Selling Studio - Dual Layer Build</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script type="module" src="https://unpkg.com/@snap/camera-kit/dist/index.js"></script>
     <style>
         :root {
             --tt-bg: #050505;
@@ -150,8 +149,8 @@
                     </label>
                 </div>
 
-                <input type="password" id="snapApiToken" autocomplete="off" placeholder="API Token / App ID" class="w-full tt-input">
-                <input type="password" id="snapLensGroupId" autocomplete="off" placeholder="Demo Lens Group ID" class="w-full tt-input">
+                <input type="password" id="snapApiToken" autocomplete="off" placeholder="API Token / App ID" oninput="saveSnapCredentials()" class="w-full tt-input">
+                <input type="password" id="snapLensGroupId" autocomplete="off" placeholder="Demo Lens Group ID" oninput="saveSnapCredentials()" class="w-full tt-input">
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="loadLensGroup()" class="tt-button py-2 px-3 rounded-lg text-xs font-bold transition">Load Available Lenses</button>
                     <button onclick="applySelectedLens()" class="tt-button tt-button-primary py-2 px-3 rounded-lg text-xs font-extrabold transition">Apply Selected Lens</button>
@@ -383,6 +382,7 @@
         let snapActiveLens = null;
         let snapAvailableLenses = [];
         let snapFiltersEnabled = false;
+        let activeSnapApiToken = '';
         let cameraHardwareEnabled = true;
         let nativeStudioGlowEnabled = false;
 
@@ -508,6 +508,22 @@
             environmentStatusBadge.className = environmentLabel === 'FILE ERROR'
                 ? 'rounded-full border border-red-800/70 bg-red-950/30 px-3 py-1 text-red-300'
                 : 'rounded-full border border-cyan-400/50 bg-cyan-950/20 px-3 py-1 text-cyan-300';
+        }
+
+        function saveSnapCredentials() {
+            localStorage.setItem('liveSellingStudioSnapApiToken', document.getElementById('snapApiToken').value.trim());
+            localStorage.setItem('liveSellingStudioSnapLensGroupId', document.getElementById('snapLensGroupId').value.trim());
+            snapStatus.innerText = 'Snap credentials saved locally';
+        }
+
+        function restoreSnapCredentials() {
+            const savedToken = localStorage.getItem('liveSellingStudioSnapApiToken') || '';
+            const savedGroupId = localStorage.getItem('liveSellingStudioSnapLensGroupId') || '';
+            document.getElementById('snapApiToken').value = savedToken;
+            document.getElementById('snapLensGroupId').value = savedGroupId;
+            if (savedToken || savedGroupId) {
+                snapStatus.innerText = 'Saved Snap credentials loaded';
+            }
         }
 
         function formatCountdown(totalSeconds) {
@@ -655,15 +671,27 @@
         async function loadSnapModule() {
             if (snapModule) return snapModule;
 
-            try {
-                snapModule = await import('https://unpkg.com/@snap/camera-kit/dist/index.js');
-                return snapModule;
-            } catch (err) {
-                console.warn('Unable to load Camera Kit Web SDK.', err);
-                snapStatus.innerText = 'Camera Kit SDK failed to load';
-                await fallbackToRawCamera('Camera Kit SDK load failed; routing raw webcam.');
-                throw err;
+            const moduleUrls = [
+                'https://cdn.jsdelivr.net/npm/@snap/camera-kit/+esm',
+                'https://esm.sh/@snap/camera-kit?bundle',
+                'https://unpkg.com/@snap/camera-kit/dist/index.js'
+            ];
+            let lastError = null;
+
+            for (const moduleUrl of moduleUrls) {
+                try {
+                    snapStatus.innerText = 'Loading Camera Kit SDK';
+                    snapModule = await import(moduleUrl);
+                    return snapModule;
+                } catch (err) {
+                    lastError = err;
+                    console.warn(`Unable to load Camera Kit Web SDK from ${moduleUrl}.`, err);
+                }
             }
+
+            await fallbackToRawCamera('Camera Kit SDK load failed; routing raw webcam.');
+            snapStatus.innerText = `Camera Kit SDK failed to load: ${lastError?.message || 'network or browser block'}`;
+            throw lastError || new Error('Camera Kit SDK failed to load');
         }
 
         async function ensureSnapSession() {
@@ -675,9 +703,31 @@
             }
 
             const kit = await loadSnapModule();
+            if (activeSnapApiToken && activeSnapApiToken !== apiToken) {
+                try {
+                    if (snapSession) {
+                        await snapSession.pause('live');
+                    }
+                } catch (err) {
+                    console.warn('Unable to pause old Snap session while swapping token.', err);
+                }
+                snapCameraKit = null;
+                snapSession = null;
+                snapOutputCanvas = null;
+                snapActiveLens = null;
+                snapAvailableLenses = [];
+                snapLensSelect.innerHTML = '<option value="">Reload lenses for saved token</option>';
+            }
+
             if (!snapCameraKit) {
-                snapStatus.innerText = 'Bootstrapping Camera Kit';
-                snapCameraKit = await kit.bootstrapCameraKit({ apiToken });
+                try {
+                    snapStatus.innerText = 'Bootstrapping Camera Kit';
+                    snapCameraKit = await kit.bootstrapCameraKit({ apiToken, logger: 'console' });
+                    activeSnapApiToken = apiToken;
+                } catch (err) {
+                    snapStatus.innerText = 'Camera Kit bootstrap failed - check Staging token and localhost origin';
+                    throw err;
+                }
             }
 
             if (!snapSession) {
@@ -729,6 +779,7 @@
         }
 
         async function loadLensGroup() {
+            saveSnapCredentials();
             const lensGroupId = document.getElementById('snapLensGroupId').value.trim();
 
             if (!lensGroupId) {
@@ -754,8 +805,11 @@
                 snapLensSelect.innerHTML = '';
 
                 if (!snapAvailableLenses.length) {
-                    snapLensSelect.innerHTML = '<option value="">No lenses found in group</option>';
-                    snapStatus.innerText = errors?.length ? 'Lens group blocked or unavailable' : 'No lenses found in group';
+                    const errorHint = errors?.map(error => error.message || error.reason || error.name).filter(Boolean).join(' / ');
+                    snapLensSelect.innerHTML = '<option value="">No web-ready lenses found</option>';
+                    snapStatus.innerText = errorHint
+                        ? `Lens group blocked: ${errorHint}`
+                        : 'Group loaded, but it has no web-ready/published lenses';
                     return;
                 }
 
@@ -769,9 +823,9 @@
                 snapStatus.innerText = `${snapAvailableLenses.length} Snap lenses ready`;
             } catch (err) {
                 console.warn('Unable to load Snap lens group.', err);
-                snapStatus.innerText = `Unable to load lens group: ${err?.message || 'check token/origin'}`;
                 snapLensSelect.innerHTML = '<option value="">Check token, group ID, and localhost</option>';
                 await fallbackToRawCamera('Snap lens group load failed; routing raw webcam.');
+                snapStatus.innerText = `Unable to load lens group: ${err?.message || 'check token/origin'}`;
             }
         }
 
@@ -839,6 +893,7 @@
         syncOverlayControls();
         updateOfferVisibilityButton();
         updateStatusBadges();
+        restoreSnapCredentials();
         updateNativeGlowButton();
         initializeVoiceProfiles();
         if (window.speechSynthesis) {
