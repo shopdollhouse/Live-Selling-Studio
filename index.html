@@ -344,7 +344,7 @@
                 <div id="cameraDiagnosticsList" class="status-box">
                     Detected cameras will appear here after refresh.
                 </div>
-                <p class="hint-text">For a true iPhone front camera, open the Vercel link on your iPhone and choose Auto Front/Selfie. Mac Continuity Camera may only expose the rear iPhone camera to Chrome.</p>
+                <p class="hint-text">For a true iPhone front camera, open the Vercel link directly on your iPhone and choose Auto Front/Selfie. Mac Continuity Camera usually exposes the rear iPhone camera to desktop Chrome. Use Camo/EpocCam/OBS virtual camera if you need iPhone selfie video inside desktop TikTok Live Studio.</p>
             </div>
 
             <div class="tt-panel p-4 space-y-3">
@@ -862,7 +862,7 @@
             return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         }
 
-        function buildCameraConstraint(sourceId = '') {
+        function buildCameraConstraint(sourceId = '', strictFacing = false) {
             const portraitQuality = {
                 width: { ideal: 1080 },
                 height: { ideal: 1920 },
@@ -872,14 +872,14 @@
             if (!sourceId || sourceId === '__selfie__') {
                 return {
                     ...portraitQuality,
-                    facingMode: { ideal: 'user' }
+                    facingMode: strictFacing ? { exact: 'user' } : { ideal: 'user' }
                 };
             }
 
             if (sourceId === '__phone__') {
                 return {
                     ...portraitQuality,
-                    facingMode: { ideal: 'user' }
+                    facingMode: strictFacing ? { exact: 'user' } : { ideal: 'user' }
                 };
             }
 
@@ -887,6 +887,21 @@
                 ...portraitQuality,
                 deviceId: { exact: sourceId }
             };
+        }
+
+        async function requestCameraStream(resolvedDeviceId) {
+            try {
+                return await navigator.mediaDevices.getUserMedia({
+                    video: buildCameraConstraint(resolvedDeviceId, true),
+                    audio: false
+                });
+            } catch (strictErr) {
+                console.warn('Strict front camera request failed; retrying with browser fallback.', strictErr);
+                return navigator.mediaDevices.getUserMedia({
+                    video: buildCameraConstraint(resolvedDeviceId, false),
+                    audio: false
+                });
+            }
         }
 
         async function startCamera(deviceId = '') {
@@ -907,14 +922,11 @@
 
             try {
                 cameraStatus.innerText = 'Requesting camera permission';
-                currentStream = await navigator.mediaDevices.getUserMedia({
-                    video: buildCameraConstraint(resolvedDeviceId),
-                    audio: false
-                });
+                currentStream = await requestCameraStream(resolvedDeviceId);
                 video.srcObject = currentStream;
                 await video.play();
                 const activeLabel = currentStream.getVideoTracks()[0]?.label || 'Camera connected';
-                cameraStatus.innerText = `${activeLabel} ${isLikelyRearCameraLabel(activeLabel) ? '- rear camera detected' : ''}`.trim();
+                cameraStatus.innerText = `${activeLabel} ${isLikelyRearCameraLabel(activeLabel) || (resolvedDeviceId === '__phone__' && isLikelyPhoneLabel(activeLabel) && !isLikelyFrontCameraLabel(activeLabel)) ? '- browser is exposing rear/Continuity camera' : ''}`.trim();
                 if (snapSession && snapFiltersEnabled) {
                     await routeStreamThroughSnap();
                 }
@@ -1824,32 +1836,31 @@
             const stockY = topY + 208;
 
             ctx.save();
-            ctx.shadowColor = 'rgba(251, 191, 36, 0.16)';
-            ctx.shadowBlur = 34;
-            ctx.shadowOffsetY = 12;
-            ctx.fillStyle = 'rgba(12, 12, 14, 0.68)';
+            ctx.shadowColor = 'rgba(97, 112, 164, 0.26)';
+            ctx.shadowBlur = 42;
+            ctx.shadowOffsetY = 18;
+            ctx.fillStyle = 'rgba(246, 247, 255, 0.88)';
             ctx.beginPath();
             ctx.roundRect(margin, topY, bannerWidth, bannerHeight, radius);
             ctx.fill();
             ctx.restore();
 
             const glassFill = ctx.createLinearGradient(margin, topY, margin + bannerWidth, topY + bannerHeight);
-            glassFill.addColorStop(0, 'rgba(255, 255, 255, 0.13)');
-            glassFill.addColorStop(0.18, 'rgba(255, 255, 255, 0.055)');
-            glassFill.addColorStop(0.66, 'rgba(255, 255, 255, 0.018)');
-            glassFill.addColorStop(1, 'rgba(255, 255, 255, 0.07)');
+            glassFill.addColorStop(0, 'rgba(255, 255, 255, 0.72)');
+            glassFill.addColorStop(0.42, 'rgba(255, 255, 255, 0.34)');
+            glassFill.addColorStop(1, 'rgba(236, 238, 252, 0.62)');
             ctx.fillStyle = glassFill;
             ctx.beginPath();
             ctx.roundRect(margin, topY, bannerWidth, bannerHeight, radius);
             ctx.fill();
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.94)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.roundRect(margin + 1, topY + 1, bannerWidth - 2, bannerHeight - 2, radius - 1);
             ctx.stroke();
 
-            ctx.strokeStyle = 'rgba(212, 163, 89, 0.34)';
+            ctx.strokeStyle = 'rgba(124, 145, 216, 0.34)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.roundRect(margin + 4, topY + 4, bannerWidth - 8, bannerHeight - 8, radius - 4);
@@ -1857,9 +1868,9 @@
 
             const topSheen = ctx.createLinearGradient(margin + 34, topY, margin + bannerWidth - 34, topY);
             topSheen.addColorStop(0, 'rgba(255, 255, 255, 0)');
-            topSheen.addColorStop(0.18, 'rgba(255, 255, 255, 0.36)');
-            topSheen.addColorStop(0.5, 'rgba(251, 191, 36, 0.30)');
-            topSheen.addColorStop(0.82, 'rgba(255, 255, 255, 0.28)');
+            topSheen.addColorStop(0.18, 'rgba(255, 255, 255, 0.74)');
+            topSheen.addColorStop(0.5, 'rgba(124, 145, 216, 0.36)');
+            topSheen.addColorStop(0.82, 'rgba(255, 255, 255, 0.66)');
             topSheen.addColorStop(1, 'rgba(255, 255, 255, 0)');
             ctx.strokeStyle = topSheen;
             ctx.lineWidth = 1.2;
@@ -1869,24 +1880,24 @@
             ctx.stroke();
 
             ctx.textAlign = 'left';
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.86)';
+            ctx.fillStyle = '#7c91d8';
             ctx.font = '800 16px ui-monospace, SFMono-Regular, Menlo, monospace';
             ctx.fillText('DOLLHOUSE DIGITAL DROP', leftX, topY + 42);
 
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = '#3f4a5f';
             const rawTitleText = activeProduct.name.toUpperCase();
             const titleText = rawTitleText.length > 20 ? `${rawTitleText.slice(0, 20)}...` : rawTitleText;
             setFittedFont(titleText, '900', 39, 'system-ui', leftMax, 26);
             ctx.fillText(titleText, leftX, titleY);
 
             const valueText = `VALUE: ${activeProduct.value || '$297'}`.toUpperCase();
-            ctx.fillStyle = 'rgba(244, 244, 245, 0.84)';
+            ctx.fillStyle = '#5f6c82';
             setFittedFont(valueText, '800', 22, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 16);
             ctx.fillText(valueText, leftX, valueY);
 
             const originalPrice = activeProduct.originalPrice || activeProduct.value || '$197';
             const originalPriceText = `WAS ${originalPrice}`.toUpperCase();
-            ctx.fillStyle = '#a1a1aa';
+            ctx.fillStyle = '#8a94aa';
             setFittedFont(originalPriceText, '700', 23, 'ui-monospace, SFMono-Regular, Menlo, monospace', leftMax, 18);
             ctx.fillText(originalPriceText, leftX, originalPriceY);
 
@@ -1903,22 +1914,22 @@
             const badgeWidth = 188;
             const badgeHeight = 44;
             const priceMax = Math.max(170, leftMax - badgeWidth - 34);
-            ctx.fillStyle = '#34D399';
+            ctx.fillStyle = '#25b987';
             setFittedFont(liveOffer, '950', 62, 'system-ui', priceMax, 38);
             ctx.fillText(liveOffer, leftX, offerY);
 
             const liveMetrics = ctx.measureText(liveOffer);
             const badgeX = Math.min(leftX + liveMetrics.width + 28, splitX - badgeWidth - 18);
             const badgeY = offerY - 39;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.055)';
-            ctx.strokeStyle = 'rgba(251, 191, 36, 0.66)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.58)';
+            ctx.strokeStyle = 'rgba(124, 145, 216, 0.56)';
             ctx.lineWidth = 1.8;
             ctx.beginPath();
             ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
             ctx.fill();
             ctx.stroke();
 
-            ctx.fillStyle = '#FBBF24';
+            ctx.fillStyle = '#6f82cb';
             ctx.font = '850 17px ui-monospace, SFMono-Regular, Menlo, monospace';
             ctx.textAlign = 'center';
             ctx.fillText(badgeText, badgeX + badgeWidth / 2, badgeY + 28);
@@ -1926,15 +1937,15 @@
             ctx.textAlign = 'right';
             const ctaText = (activeProduct.cta || 'LINK IN BIO').toUpperCase();
             const safeCtaText = ctaText.length > 22 ? `${ctaText.slice(0, 22)}...` : ctaText;
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = '#3f4a5f';
             setFittedFont(safeCtaText, '950', 35, 'system-ui', rightMax, 20);
             ctx.fillText(safeCtaText, rightX, ctaY);
 
             const ctaMetrics = ctx.measureText(safeCtaText);
             const underlineWidth = Math.min(ctaMetrics.width, rightMax);
             const underlineGradient = ctx.createLinearGradient(rightX - underlineWidth, ctaY + 13, rightX, ctaY + 13);
-            underlineGradient.addColorStop(0, 'rgba(37, 244, 238, 0.10)');
-            underlineGradient.addColorStop(1, 'rgba(52, 211, 153, 0.86)');
+            underlineGradient.addColorStop(0, 'rgba(124, 145, 216, 0.12)');
+            underlineGradient.addColorStop(1, 'rgba(124, 145, 216, 0.86)');
             ctx.strokeStyle = underlineGradient;
             ctx.lineWidth = 5;
             ctx.lineCap = 'round';
@@ -1945,7 +1956,7 @@
             ctx.textAlign = 'right';
 
             const expireText = 'BONUS EXPIRES WHEN TIMER HITS ZERO';
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.92)';
+            ctx.fillStyle = '#6f82cb';
             setFittedFont(expireText, '800', 20, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 14);
             ctx.fillText(expireText, rightX, timerLabelY);
 
@@ -1955,17 +1966,17 @@
             const stockWidth = Math.min(ctx.measureText(stockText).width + 42, rightMax);
             const stockX = rightX - stockWidth;
             const stockPillY = stockY - 31;
-            ctx.fillStyle = 'rgba(244, 63, 94, 0.15)';
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.58)';
+            ctx.strokeStyle = 'rgba(216, 108, 138, 0.34)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.roundRect(stockX, stockPillY, stockWidth, 44, 22);
             ctx.fill();
             ctx.stroke();
-            ctx.fillStyle = '#ff5f7e';
+            ctx.fillStyle = '#d85076';
             ctx.fillText(stockText, rightX - 20, stockY);
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.58)';
+            ctx.fillStyle = '#7c879c';
             setFittedFont('INSTANT DOWNLOAD AFTER CHECKOUT', '750', 15, 'ui-monospace, SFMono-Regular, Menlo, monospace', rightMax, 12);
             ctx.fillText('INSTANT DOWNLOAD AFTER CHECKOUT', rightX, topY + 252);
         }
